@@ -502,7 +502,7 @@ User: "What's the official price?"
   "sellerInfo": null,
   "price": null,
   "currency": "USD",
-  "imageLink": "{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}",
+  "imageLink": "{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}"
   "imageQualityScore": null,
   "searchPerformed": false,
   "searchQueries": [],
@@ -2134,31 +2134,117 @@ IF DATABASE UPDATE WITHOUT IMAGE LINK CHECK = FAILURE!
 
 ### **For n8n Setup:**
 
+**📊 Database: Google Sheets** (for authenticity_queries data)
+**🧠 Memory: Supabase PostgreSQL** (for conversation history only)
+
+---
+
 **Get Database Logger Tool:**
 ```javascript
-// Supabase Query
-SELECT * FROM authenticity_queries 
-WHERE chat_id = {{ $json.message.from.id }}
-ORDER BY timestamp DESC 
-LIMIT 1
+// Google Sheets - Read operation
+// Node: Google Sheets → Read
+// Spreadsheet: authenticity_queries
+// Sheet: Sheet1
+// Operation: Lookup Row
+// Lookup Column: chat_id
+// Lookup Value: {{ $json.message.from.id }}
+// Returns: All columns for matching row (or empty if not found)
 ```
 
 **Database Logger Tool (Create):**
 ```javascript
-// Supabase Insert
-INSERT INTO authenticity_queries (query_id, chat_id, username, ...)
-VALUES (...)
-RETURNING query_id
+// Google Sheets - Append operation
+// Node: Google Sheets → Append
+// Spreadsheet: authenticity_queries
+// Sheet: Sheet1
+// Data to append:
+{
+  "query_id": "AQ-{{$now.format('YYYYMMDDHHmmss')}}-{{ random4chars }}",
+  "chat_id": "{{ $json.message.from.id }}",
+  "username": "{{ $json.message.from.first_name }}",
+  "telegram_username": "{{ $json.message.from.username }}",
+  "brand": "{{ $extracted_brand or null }}",
+  "product": "{{ $extracted_product or null }}",
+  "seller_info": null,
+  "price": null,
+  "currency": "USD",
+  "image_link": "{{ $image_url or null }}",
+  "image_quality_score": null,
+  "search_performed": false,
+  "search_queries": "[]",
+  "official_msrp": null,
+  "seller_authorized": null,
+  "risk_score": null,
+  "verdict": "Incomplete",
+  "reasons": "[]",
+  "key_findings": "Initial contact - collecting data",
+  "timestamp": "{{ $now }}"
+}
 ```
 
 **Database Updater Tool (Update):**
 ```javascript
-// Supabase Update
-UPDATE authenticity_queries
-SET 
-  brand = COALESCE($newBrand, brand),
-  price = COALESCE($newPrice, price),
-  seller_info = COALESCE($newSeller, seller_info),
-  ...
-WHERE query_id = $queryId
+// Google Sheets - Update operation
+// Node: Google Sheets → Update
+// Spreadsheet: authenticity_queries
+// Sheet: Sheet1
+// Operation: Update Row
+// Lookup Column: query_id
+// Lookup Value: {{ $queryId }}
+// Data to update (only changed fields):
+{
+  "brand": "{{ $newBrand }}",
+  "product": "{{ $newProduct }}",
+  "seller_info": "{{ $newSellerInfo }}",
+  "price": {{ $newPrice }},
+  "image_link": "{{ $retrievedImageLink }}",  // From Get Images Link DB!
+  "image_quality_score": {{ $imageScore }},
+  "search_performed": {{ $searchPerformed }},
+  "search_queries": "{{ JSON.stringify($searchQueriesArray) }}",
+  "official_msrp": {{ $officialMSRP }},
+  "seller_authorized": {{ $sellerAuthorized }},
+  "risk_score": {{ $riskScore }},
+  "verdict": "{{ $verdict }}",
+  "reasons": "{{ JSON.stringify($reasonsArray) }}",
+  "key_findings": "{{ $keyFindings }}",
+  "timestamp": "{{ $now }}"
+}
+```
+
+**Get Images Link DB by Query:**
+```javascript
+// Google Sheets - Read operation
+// Node: Google Sheets → Read
+// Spreadsheet: image_links (or separate sheet in same file)
+// Sheet: Sheet1
+// Operation: Lookup Row
+// Lookup Column: query_id
+// Lookup Value: {{ $queryId }}
+// Returns: { query_id, image_link }
+```
+
+**Update Images Link DB for Query:**
+```javascript
+// Google Sheets - Append or Update operation
+// Node: Google Sheets → Append/Update
+// Spreadsheet: image_links (or separate sheet in same file)
+// Sheet: Sheet1
+// Check if query_id exists:
+//   - If exists: Update image_link
+//   - If not exists: Append new row
+// Data:
+{
+  "query_id": "{{ $queryId }}",
+  "image_link": "{{ $newImageLink }}"
+}
+```
+
+---
+
+**🧠 Supabase PostgreSQL (Memory Only):**
+```javascript
+// Used ONLY for conversation memory (Window Buffer Memory)
+// Table: chat_memory
+// Stores: chat_id, messages, timestamps
+// Not used for product authentication data!
 ```
