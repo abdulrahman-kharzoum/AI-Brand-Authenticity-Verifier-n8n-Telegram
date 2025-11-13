@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Brand Authenticity Verifier - Setup Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --dark-bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.5);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .title-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 60px 0 30px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .section-icon {
+            font-size: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Prerequisites Grid */
+        .prerequisites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .prereq-item {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .prereq-item:hover {
+            border-left-color: var(--accent);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+        }
+
+        .prereq-item::before {
+            content: '✓';
+            color: var(--success);
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Setup Steps */
+        .steps-container {
+            display: grid;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .step-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 35px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .step-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+        }
+
+        .step-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .step-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .step-arrow {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Design Decisions */
+        .design-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .design-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .design-card:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            transform: scale(1.02);
+        }
+
+        .design-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .design-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .design-card li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .design-card li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Code Blocks */
+        code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            color: #a5b4fc;
+            font-size: 0.9em;
+        }
+
+        /* Footer/Resources */
+        .resources-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 20px;
+            padding: 50px;
+            margin-top: 60px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .resources-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .resource-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .resource-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+        }
+
+        .creator-info {
+            margin-top: 30px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .creator-name {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .design-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .resources-section {
+                padding: 30px 20px;
+            }
+
+            .step-card:hover {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Scroll Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        /* Tag/Badge */
+        .tag {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--secondary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 5px 5px 5px 0;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="animate-in">
+            <div class="title-badge">🤖 AI-Powered Verification System</div>
+            <h1>AI Brand Authenticity Verifier</h1>
+            <p class="subtitle">
+                A Telegram bot powered by n8n that verifies beauty/luxury product authenticity
+                using AI image analysis, voice transcription, product research, and risk scoring.
+            </p>
+        </header>
+
+        <!-- Prerequisites Section -->
+        <section class="animate-in">
+            <div class="section-header">
+                <span class="section-icon">📋</span>
+                <h2>Prerequisites</h2>
+            </div>
+            <div class="prerequisites-grid">
+                <div class="prereq-item">
+                    n8n instance (cloud or self-hosted) <span class="tag">v1.119.1</span>
+                </div>
+                <div class="prereq-item">
+                    Telegram Bot Token from @BotFather
+                </div>
+                <div class="prereq-item">
+                    Google Gemini Flash 2.5 API Key
+                </div>
+                <div class="prereq-item">
+                    Supabase Account (free tier available)
+                </div>
+                <div class="prereq-item">
+                    Google Custom Search API <span class="tag">Optional</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Setup Steps Section -->
+        <section class="animate-in">
+            <div class="section-header">
+                <span class="section-icon">⚡</span>
+                <h2>Quick Setup (7 Steps)</h2>
+            </div>
+            <div class="steps-container">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Create Telegram Bot</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Chat with @BotFather 
+                        <span class="step-arrow">→</span> /newbot 
+                        <span class="step-arrow">→</span> Save bot token<br>
+                        <span class="step-arrow">→</span> /setprivacy 
+                        <span class="step-arrow">→</span> disable
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Setup Supabase Database</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Create <code>n8n_chat_histories_aibrandauthenticity</code> table<br>
+                        <span class="step-arrow">→</span> Copy Project URL + API key
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Get Google AI Key</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Visit <code>aistudio.google.com/app/apikey</code><br>
+                        <span class="step-arrow">→</span> Create/copy API key
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Configure Google Search (Optional)</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Visit <code>programmablesearchengine.google.com</code> 
+                        <span class="step-arrow">→</span> Create engine<br>
+                        <span class="step-arrow">→</span> Enable Custom Search API in Google Cloud Console
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="step-card">
+                    <div class="step-number">5</div>
+                    <div class="step-title">Import Workflow to n8n</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Download <code>AI_Brand_Authenticity_Verifier.json</code><br>
+                        <span class="step-arrow">→</span> n8n: Workflows 
+                        <span class="step-arrow">→</span> Import from File<br>
+                        <span class="step-arrow">→</span> Upload JSON file
+                    </div>
+                </div>
+
+                <!-- Step 6 -->
+                <div class="step-card">
+                    <div class="step-number">6</div>
+                    <div class="step-title">Add Credentials</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Telegram Bot (access token)<br>
+                        <span class="step-arrow">→</span> Google Gemini (API key)<br>
+                        <span class="step-arrow">→</span> Supabase (host, database, user, password, API key)<br>
+                        <span class="step-arrow">→</span> Google Search (API key + CX)
+                    </div>
+                </div>
+
+                <!-- Step 7 -->
+                <div class="step-card">
+                    <div class="step-number">7</div>
+                    <div class="step-title">Configure & Test</div>
+                    <div class="step-content">
+                        <span class="step-arrow">→</span> Set Telegram webhook URL (auto-generated)<br>
+                        <span class="step-arrow">→</span> Configure AI Agent: <code>model=gemini-2.5-flash</code>, <code>temp=0.8</code><code>Top_K=40.0</code><code>Top_P=0.95</code><br>
+                        <span class="step-arrow">→</span> Image Analyzer: <code>model=gemini-2.5-pro</code><br>
+                        <span class="step-arrow">→</span> Memory: Window Buffer, max messages=10<br>
+                        <span class="step-arrow">→</span> Test: Send photo to bot, verify analysis
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Design Decisions Section -->
+        <section class="animate-in">
+            <div class="section-header">
+                <span class="section-icon">🏗️</span>
+                <h2>Key Design Decisions</h2>
+            </div>
+            <div class="design-grid">
+                <!-- Architecture -->
+                <div class="design-card">
+                    <h3>🔧 Architecture</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Modular AI Agent Pattern</p>
+                    <ul>
+                        <li>Telegram Bot Interface → n8n Workflow → AI Agent Orchestration</li>
+                        <li>Separate specialized tools (Image Analyzer, Search, Think Tool)</li>
+                        <li>Prevents database logging for non-product messages</li>
+                    </ul>
+                </div>
+
+                <!-- AI Model -->
+                <div class="design-card">
+                    <h3>🤖 AI Model Choice</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Google Gemini Flash 2.5</p>
+                    <ul>
+                        <li>Fast inference (&lt;1sec for conversations)</li>
+                        <li>Multi-modal: voice transcription + image vision API</li>
+                        <li>Long context window (handles extended conversations)</li>
+                        <li>Cost-effective for high-volume requests</li>
+                    </ul>
+                </div>
+
+                <!-- Database -->
+                <div class="design-card">
+                    <h3>💾 Database Strategy</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Dual-Table Approach</p>
+                    <ul>
+                        <li><code>n8n_chat_histories</code>: Conversation memory for context</li>
+                        <li>Prevents image loss with separate Get Images Link DB using Google Sheet</li>
+                        <li>Query ID tracking maintains session state</li>
+                    </ul>
+                </div>
+
+                <!-- Memory System -->
+                <div class="design-card">
+                    <h3>🧠 Memory System</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Window Buffer (Supabase-backed)</p>
+                    <ul>
+                        <li>Stores last 10-20 messages per user (by chat_id)</li>
+                        <li>Eliminates repetitive questions</li>
+                        <li>Maintains conversation context across multiple inputs</li>
+                        <li>Enables smart follow-up without re-querying</li>
+                    </ul>
+                </div>
+
+                <!-- Risk Scoring -->
+                <div class="design-card">
+                    <h3>⚖️ Risk Scoring</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Weighted Multi-Factor Algorithm</p>
+                    <ul>
+                        <li>Price discount: 40% weight (>40% off = red flag)</li>
+                        <li>Seller authorization: 25% weight</li>
+                        <li>Image quality: 20% weight (&lt;6/10 = concerning)</li>
+                        <li>Packaging authenticity: 15% weight</li>
+                        <li>Batch code format: 10% weight</li>
+                        <li>Output: 0.0-1.0 score → Verdict</li>
+                    </ul>
+                </div>
+
+                <!-- Image Analysis -->
+                <div class="design-card">
+                    <h3>🔍 Image Analysis</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Forensic Vision Approach</p>
+                    <ul>
+                        <li>Detects: print quality, typography, logo proportions</li>
+                        <li>Returns 0-10 quality score + specific red flags</li>
+                        <li>Separate database storage (prevents loss on follow-up)</li>
+                    </ul>
+                </div>
+
+                <!-- Tool Orchestration -->
+                <div class="design-card">
+                    <h3>🛠️ Tool Orchestration</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">Conditional Triggering</p>
+                    <ul>
+                        <li>Image Analyzer: Always runs on photo upload</li>
+                        <li>Search Tool: Triggered if price >30% off or seller unknown</li>
+                        <li>Think Tool: Mandatory for every product message</li>
+                        <li>Database Logger: SKIPPED for greetings</li>
+                    </ul>
+                </div>
+
+                <!-- Conversation Flow -->
+                <div class="design-card">
+                    <h3>🔄 Conversation Flow</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">State Machine</p>
+                    <ul>
+                        <li>Intake → DataCollection → Research</li>
+                        <li>Analysis (Think) → Logging → Response</li>
+                        <li>Loop or End based on user interaction</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources Section -->
+        <section class="resources-section animate-in">
+            <div class="section-header" style="border-bottom: none; justify-content: center;">
+                <span class="section-icon">🔗</span>
+                <h2>Resources & Links</h2>
+            </div>
+            <div class="resources-links">
+                <a href="https://github.com/abdulrahman-kharzoum" class="resource-link" target="_blank">
+                    <span>📦</span> GitHub Repository
+                </a>
+                <a href="https://abdulrahmankharzoum.zentraid.com" class="resource-link" target="_blank">
+                    <span>🌐</span> Portfolio
+                </a>
+                <a href="https://www.linkedin.com/in/abdulrahman-kharzoum-9040bb20a" class="resource-link" target="_blank">
+                    <span>💼</span> LinkedIn Profile
+                </a>
+            </div>
+            <div class="creator-info">
+                Created with 💜 by <span class="creator-name">Abdulrahman Kharzoum</span>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Scroll animation observer
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animated elements
+        document.querySelectorAll('.animate-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Smooth scroll for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

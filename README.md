@@ -368,47 +368,6 @@ Backend: Supabase PostgreSQL
 
 **Purpose:** Persistent storage and analytics
 
-**Tables:**
-
-#### `authenticity_queries`
-
-```sql
-CREATE TABLE authenticity_queries (
-  query_id VARCHAR(50) PRIMARY KEY,
-  username VARCHAR(100),
-  chat_id BIGINT,
-  telegram_username VARCHAR(100),
-  brand VARCHAR(100),
-  product TEXT,
-  seller_info TEXT,
-  price DECIMAL(10,2),
-  currency VARCHAR(10),
-  image_link TEXT,
-  image_quality_score INTEGER,
-  search_performed BOOLEAN,
-  search_queries JSONB,
-  official_msrp DECIMAL(10,2),
-  seller_authorized BOOLEAN,
-  risk_score DECIMAL(3,2),
-  verdict VARCHAR(50),
-  reasons JSONB,
-  key_findings TEXT,
-  timestamp TIMESTAMP DEFAULT NOW(),
-  conversation_turns INTEGER
-);
-```
-
-**Indexes:**
-
-```sql
-CREATE INDEX idx_chat_id ON authenticity_queries(chat_id);
-CREATE INDEX idx_brand ON authenticity_queries(brand);
-CREATE INDEX idx_verdict ON authenticity_queries(verdict);
-CREATE INDEX idx_timestamp ON authenticity_queries(timestamp DESC);
-```
-
----
-
 ### 7. **Telegram Bot API**
 
 **Integration:** n8n Telegram Trigger + Message nodes
@@ -1015,49 +974,6 @@ Check execution logs
 "Dior Sauvage official price"
 → "Dior Sauvage EDT 100ml price 2024 USA"
 ```
-
----
-
-#### ❌ Database insert fails
-
-**Check:**
-
-1. Supabase credentials correct
-2. Table schema matches
-3. Data types compatible
-4. Network connection stable
-
-**Fix:**
-
-```sql
--- Test connection
-SELECT NOW();
-
--- Check table exists
-SELECT * FROM authenticity_queries LIMIT 1;
-
--- Verify column names
-\d authenticity_queries
-```
-
----
-
-#### ❌ Memory not working
-
-**Check:**
-
-1. Window Buffer Memory configured
-2. Session ID uses chat_id
-3. Supabase backend connected
-4. chat_memory table exists
-
-**Fix:**
-
-- Clear old memory: `DELETE FROM chat_memory WHERE session_id = '123456789';`
-- Restart workflow
-- Check memory node configuration
-
----
 
 ## 📈 Performance Metrics
 
