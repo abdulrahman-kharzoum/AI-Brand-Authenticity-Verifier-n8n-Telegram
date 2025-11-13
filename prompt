@@ -493,7 +493,7 @@ User: "What's the official price?"
 ```json
 {
   "tableName": "authenticity_queries",
-  "queryId": "AQ-{{$now.format('YYYYMMDDHHmmss')}}-{{ random4chars }}",
+  "queryId": "AQ-{{$now.format('YYYYMMDDHHmmss')}}-{{ Array(4).fill(0).map(() => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * 62))).join('') }}",
   "username": "{{ $json.message.from.first_name }}",
   "chatId": "{{ $json.message.from.id }}",
   "telegramUsername": "{{ $json.message.from.username }}",
@@ -502,7 +502,7 @@ User: "What's the official price?"
   "sellerInfo": null,
   "price": null,
   "currency": "USD",
-  "imageLink": "{{ image URL or null }}",
+  "imageLink": "{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}",
   "imageQualityScore": null,
   "searchPerformed": false,
   "searchQueries": [],
