@@ -9,7 +9,9 @@
 [![Supabase](https://img.shields.io/badge/Database-Supabase-green)](https://supabase.com)
 
 ---
-
+## n8n Version used:
++ Version 1.119.1 stable Cloud
++ Released in 11/12/2025
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
@@ -188,26 +190,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 │  • OCR Text      │  │  • Think Tool    │  │  • Fake Patterns │
 │  • Quality Score │  │  • Memory Access │  │  • Retail Lists  │
 └──────────────────┘  └──────────────────┘  └──────────────────┘
-             │                  │                  │
-             └──────────────────┼──────────────────┘
-                                ▼
-                    ┌──────────────────────┐
-                    │  SUPABASE POSTGRES   │
-                    │  ──────────────────  │
-                    │  • Query Logs        │
-                    │  • User Data         │
-                    │  • Conversation Hist │
-                    │  • Analytics         │
-                    └──────────────────────┘
-                                │
-                                ▼
-                    ┌──────────────────────┐
-                    │  WINDOW BUFFER MEMORY│
-                    │  ──────────────────  │
-                    │  • Short-term context│
-                    │  • Conversation state│
-                    │  • Prevent repeats   │
-                    └──────────────────────┘
+
 ```
 
 ---
@@ -500,56 +483,28 @@ CREATE INDEX idx_timestamp ON authenticity_queries(timestamp DESC);
 
 ---
 
-### Step 2: Set Up Supabase Database
-
-1. Create new project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor**
-3. Run this schema:
-
-```sql
--- Create authenticity queries table
-CREATE TABLE authenticity_queries (
-  query_id VARCHAR(50) PRIMARY KEY,
-  username VARCHAR(100),
-  chat_id BIGINT NOT NULL,
-  telegram_username VARCHAR(100),
-  brand VARCHAR(100),
-  product TEXT,
-  seller_info TEXT,
-  price DECIMAL(10,2),
-  currency VARCHAR(10) DEFAULT 'USD',
-  image_link TEXT,
-  image_quality_score INTEGER CHECK (image_quality_score >= 0 AND image_quality_score <= 10),
-  search_performed BOOLEAN DEFAULT FALSE,
-  search_queries JSONB,
-  official_msrp DECIMAL(10,2),
-  seller_authorized BOOLEAN,
-  risk_score DECIMAL(3,2) CHECK (risk_score >= 0 AND risk_score <= 1),
-  verdict VARCHAR(50),
-  reasons JSONB,
-  key_findings TEXT,
-  timestamp TIMESTAMP DEFAULT NOW(),
-  conversation_turns INTEGER DEFAULT 1
-);
-
--- Create indexes for performance
-CREATE INDEX idx_chat_id ON authenticity_queries(chat_id);
-CREATE INDEX idx_brand ON authenticity_queries(brand);
-CREATE INDEX idx_verdict ON authenticity_queries(verdict);
-CREATE INDEX idx_timestamp ON authenticity_queries(timestamp DESC);
-CREATE INDEX idx_risk_score ON authenticity_queries(risk_score DESC);
-
--- Create memory table (for Window Buffer)
-CREATE TABLE chat_memory (
-  id SERIAL PRIMARY KEY,
-  session_id VARCHAR(100) NOT NULL,
-  message_type VARCHAR(20), -- 'human' or 'ai'
-  content TEXT,
-  timestamp TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX idx_session_id ON chat_memory(session_id, timestamp DESC);
-```
+### Step 2: Set Up Google Sheet Database
+AI Brand  Authenticity Verifier File
+query_id
+	Telegram Username
+  	chatID
+    	product name
+      	brand name
+         	price that customer paid
+          	seller_info
+             	image_link
+              	imageQualityScore
+                	risk_score
+                  	verdict
+                    	reasons
+                      	sellerAuthorized
+                        	searchQueries
+                          	searchPerformed
+                            	officialMSRP
+                              	timestamp									
+AI Brand  Authenticity Verifier Images db :
+query_id
+	image_link																								
 
 4. Go to **Settings → API** and copy:
    - Project URL
@@ -622,30 +577,26 @@ Open the workflow and update these node configurations:
 
 **2. AI Agent Node:**
 
-- Model: `gemini-2.0-flash-exp` or `gemini-1.5-flash-002`
-- Temperature: `0.3` (for consistent analysis)
-- Max tokens: `2048`
-- System prompt: [Use the optimized prompt from above]
+- Model: `gemini-2.5-flash` 
+- Temperature: `0.8` (for consistent analysis)
+- Top K: `40.0`
+- Top P: `0.95`
+- System prompt: [Use the optimized prompt ]
 
 **3. Image Analyzer Node:**
 
-- Model: `gemini-2.0-flash-exp` (supports vision)
+- Model: `gemini-2.5-pro` (best supports vision)
 - Input: Image URL from Telegram
 - Prompt: [Use forensic image analysis prompt]
 
 **4. Memory Node:**
-
-- Type: `Window Buffer Memory`
-- Max messages: `20`
-- Session ID: `{{ $json.message.from.id }}`
+Postgres Chat Memory
+Stores the chat history in Postgres table.
+- Type: `Postgres Chat Memory`
+- Max messages: `10`
+- key: `{{ $('Telegram Trigger').item.json.message.from.id }}`
 - Supabase connection configured
 
-**5. Supabase Insert Node:**
-
-- Table: `authenticity_queries`
-- Columns: Map according to schema
-
----
 
 ### Step 7: Test the Workflow
 
@@ -660,37 +611,6 @@ Open the workflow and update these node configurations:
    - ✅ Search triggered (check logs)
    - ✅ Verdict delivered
    - ✅ Data saved to Supabase
-
----
-
-### Step 8: Monitor & Optimize
-
-**Check Supabase:**
-
-```sql
--- View recent queries
-SELECT * FROM authenticity_queries
-ORDER BY timestamp DESC
-LIMIT 10;
-
--- Analytics: Most queried brands
-SELECT brand, COUNT(*) as queries
-FROM authenticity_queries
-GROUP BY brand
-ORDER BY queries DESC;
-
--- Average risk scores by brand
-SELECT brand, AVG(risk_score) as avg_risk
-FROM authenticity_queries
-WHERE risk_score IS NOT NULL
-GROUP BY brand;
-```
-
-**n8n Execution Logs:**
-
-- Monitor for errors
-- Check execution times
-- Verify tool calls
 
 ---
 
@@ -897,104 +817,15 @@ Feel free to send another voice message or text if you have more questions! 🎤
 ### Complete Table Structure
 
 ```sql
--- Main queries table
-CREATE TABLE authenticity_queries (
-  -- Identification
-  query_id VARCHAR(50) PRIMARY KEY,
-  username VARCHAR(100),
-  chat_id BIGINT NOT NULL,
-  telegram_username VARCHAR(100),
-
-  -- Product details
-  brand VARCHAR(100),
-  product TEXT,
-  seller_info TEXT,
-  price DECIMAL(10,2),
-  currency VARCHAR(10) DEFAULT 'USD',
-
-  -- Image data
-  image_link TEXT,
-  image_quality_score INTEGER CHECK (image_quality_score >= 0 AND image_quality_score <= 10),
-
-  -- Search intelligence
-  search_performed BOOLEAN DEFAULT FALSE,
-  search_queries JSONB,
-  official_msrp DECIMAL(10,2),
-  seller_authorized BOOLEAN,
-
-  -- Analysis results
-  risk_score DECIMAL(3,2) CHECK (risk_score >= 0 AND risk_score <= 1),
-  verdict VARCHAR(50) CHECK (verdict IN ('Likely Genuine', 'Likely Counterfeit', 'Unclear', 'Incomplete')),
-  reasons JSONB,
-  key_findings TEXT,
-
-  -- Metadata
-  timestamp TIMESTAMP DEFAULT NOW(),
-  conversation_turns INTEGER DEFAULT 1
-);
-
 -- Memory for conversation context
-CREATE TABLE chat_memory (
-  id SERIAL PRIMARY KEY,
-  session_id VARCHAR(100) NOT NULL,
-  message_type VARCHAR(20) CHECK (message_type IN ('human', 'ai')),
-  content TEXT,
-  timestamp TIMESTAMP DEFAULT NOW()
-);
+create table public.n8n_chat_histories_aibrandauthenticity (
+  id serial not null,
+  session_id character varying(255) not null,
+  message jsonb not null,
+  constraint n8n_chat_histories_aibrandauthenticity_pkey primary key (id)
+) TABLESPACE pg_default;
 
--- Optional: User profiles
-CREATE TABLE user_profiles (
-  chat_id BIGINT PRIMARY KEY,
-  username VARCHAR(100),
-  first_name VARCHAR(100),
-  telegram_username VARCHAR(100),
-  total_queries INTEGER DEFAULT 0,
-  first_interaction TIMESTAMP DEFAULT NOW(),
-  last_interaction TIMESTAMP DEFAULT NOW()
-);
 ```
-
-### Sample Queries
-
-```sql
--- Get user's verification history
-SELECT query_id, brand, product, verdict, risk_score, timestamp
-FROM authenticity_queries
-WHERE chat_id = 123456789
-ORDER BY timestamp DESC;
-
--- Find most counterfeited brands
-SELECT brand,
-       COUNT(*) as total_checks,
-       SUM(CASE WHEN verdict = 'Likely Counterfeit' THEN 1 ELSE 0 END) as fake_count,
-       ROUND(AVG(risk_score), 2) as avg_risk
-FROM authenticity_queries
-WHERE verdict IN ('Likely Genuine', 'Likely Counterfeit')
-GROUP BY brand
-ORDER BY fake_count DESC;
-
--- Risky sellers
-SELECT seller_info,
-       COUNT(*) as checks,
-       AVG(risk_score) as avg_risk,
-       SUM(CASE WHEN verdict = 'Likely Counterfeit' THEN 1 ELSE 0 END) as fakes
-FROM authenticity_queries
-WHERE seller_info IS NOT NULL
-GROUP BY seller_info
-HAVING AVG(risk_score) > 0.5
-ORDER BY avg_risk DESC;
-
--- Daily analytics
-SELECT DATE(timestamp) as date,
-       COUNT(*) as total_queries,
-       AVG(risk_score) as avg_risk,
-       AVG(conversation_turns) as avg_turns
-FROM authenticity_queries
-GROUP BY DATE(timestamp)
-ORDER BY date DESC;
-```
-
----
 
 ## 🔄 Conversation Flow
 
@@ -1228,85 +1059,14 @@ SELECT * FROM authenticity_queries LIMIT 1;
 
 ---
 
-## 🔌 API & Integration
-
-### Webhook Endpoints
-
-**Telegram Webhook:**
-
-```
-POST https://your-n8n-instance.com/webhook/telegram-bot
-```
-
-**Query API (optional, if you expose it):**
-
-```
-GET  /api/authenticity/query/:queryId
-POST /api/authenticity/check
-GET  /api/authenticity/user/:chatId/history
-```
-
----
-
-### Programmatic Access
-
-**Example: Query database directly**
-
-```javascript
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  "https://your-project.supabase.co",
-  "your-anon-key"
-);
-
-// Get user's verification history
-const { data, error } = await supabase
-  .from("authenticity_queries")
-  .select("*")
-  .eq("chat_id", 123456789)
-  .order("timestamp", { ascending: false });
-
-console.log(data);
-```
-
----
-
-### Extending the System
-
-**Add new tool:**
-
-```javascript
-// In AI Agent node, add to tools array
-{
-  "name": "price_comparison",
-  "description": "Compare prices across multiple retailers",
-  "parameters": {
-    "brand": "string",
-    "product": "string"
-  }
-}
-```
-
-**Add new verification factor:**
-
-```sql
--- Extend database schema
-ALTER TABLE authenticity_queries
-ADD COLUMN receipt_verified BOOLEAN,
-ADD COLUMN packaging_weight DECIMAL(5,2);
-```
-
----
-
 ## 📈 Performance Metrics
 
 ### Expected Performance
 
 | Metric             | Target      | Notes                          |
 | ------------------ | ----------- | ------------------------------ |
-| **Response Time**  | <5 seconds  | For simple queries (text only) |
-| **Image Analysis** | <8 seconds  | Including upload + processing  |
+| **Response Time**  | <10 seconds  | For simple queries (text only) |
+| **Image Analysis** | <60 seconds  | Including upload + processing  |
 | **With Search**    | <12 seconds | Image + search + analysis      |
 | **Accuracy**       | >85%        | Based on manual verification   |
 | **Uptime**         | 99%+        | n8n workflow stability         |
@@ -1318,40 +1078,6 @@ ADD COLUMN packaging_weight DECIMAL(5,2);
 3. **Optimize image size** (compress before sending to API)
 4. **Batch database inserts** (if high volume)
 5. **Use CDN for images** (faster loading)
-
----
-
-## 🔒 Security & Privacy
-
-### Data Protection
-
-- **Encryption:** All data in Supabase encrypted at rest
-- **API Keys:** Store in n8n credentials (never in code)
-- **User Privacy:** No personal data shared with third parties
-- **Image Storage:** Optional - can delete after analysis
-- **GDPR Compliant:** Users can request data deletion
-
-### Best Practices
-
-```javascript
-// Sanitize user input
-function sanitize(input) {
-  return input
-    .replace(/<script>/gi, '')
-    .substring(0, 500); // Limit length
-}
-
-// Rate limiting (in n8n)
-// Add "Limit" node: 10 requests per user per minute
-
-// Anonymize data for analytics
-SELECT
-  brand,
-  verdict,
-  risk_score
-FROM authenticity_queries
--- Exclude: username, chat_id, telegram_username
-```
 
 ---
 
@@ -1387,7 +1113,9 @@ MIT License - Free to use and modify
 - Supabase PostgreSQL
 - Telegram Bot API
 
+
 **Created for:** Protecting consumers from counterfeit beauty and luxury products
+**Created by:** Abdulrahman Kharzoum
 
 ---
 
@@ -1395,13 +1123,13 @@ MIT License - Free to use and modify
 
 **For technical issues:**
 
-- Check troubleshooting section
 - Review n8n execution logs
-- Verify API quotas
-- Test each component individually
+- contact me: https://www.linkedin.com/in/abdulrahman-kharzoum-9040bb20a
+- my Portfolio: https://abdulrahmankharzoum.zentraid.com
+- another Ai project: https://nevermissai.zentraid.com
 
 **For questions:**
-
 - Open GitHub issue
-- Join n8n community
-- Contact via Telegram: @YourSupportUsername
+- Contact via Telegram: @Abdulrahman_Kharzoum
+
+Thank you ❤️
