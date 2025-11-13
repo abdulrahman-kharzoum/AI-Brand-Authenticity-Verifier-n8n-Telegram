@@ -502,7 +502,7 @@ User: "What's the official price?"
   "sellerInfo": null,
   "price": null,
   "currency": "USD",
-  "imageLink": "{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}"
+  "imageLink": "{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}",
   "imageQualityScore": null,
   "searchPerformed": false,
   "searchQueries": [],
