@@ -1,0 +1,1785 @@
+{
+  "name": "AI Brand Authenticity Verifier via Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "edited_message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "4d30a555-362c-42f7-b51b-36dd33846411",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        3776,
+        -224
+      ],
+      "webhookId": "0f17749f-a287-45bf-9a5c-551711a3429b",
+      "credentials": {
+        "telegramApi": {
+          "id": "u7B4fR7IbpSzio8h",
+          "name": "ai_brand_wonder_beauties"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5821f983-f29c-4ab8-98d6-1cca60d5dd08",
+              "name": "message.from.id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "number"
+            },
+            {
+              "id": "e4d898cb-c52a-4df0-a5a1-67d297647275",
+              "name": "message.from.first_name",
+              "value": "={{ $json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d0bd9b9a-3c6e-47a2-b00d-e3082bc2084a",
+              "name": "message.from.last_name",
+              "value": "={{ $json.message.from.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0b48926d-c43d-4090-986f-6b2733ff9954",
+              "name": "message.from.username",
+              "value": "={{ $json.message.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "52112208-489c-4bc8-9875-076917f81571",
+              "name": "message.chat.id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "f3ecd209-71be-45f1-af49-6b13a087c85c",
+              "name": "message.text",
+              "value": "={{ $json.message.text  ||  $json.message.caption }}",
+              "type": "string"
+            },
+            {
+              "id": "34ff1599-e288-47f1-98cd-c4367519ab14",
+              "name": "message.chat.type",
+              "value": "={{ $json.message.chat.type }}",
+              "type": "string"
+            },
+            {
+              "id": "9cb8858c-e287-4b81-96d4-8ece2d315064",
+              "name": "message.date",
+              "value": "={{ $json.message.date }}",
+              "type": "number"
+            },
+            {
+              "id": "a10c996f-78af-4b2a-8591-dd5602774816",
+              "name": "message.photo[0].file_id",
+              "value": "={{ $json.message.photo?.at(-1)?.file_id || $json.message.document.thumbnail.file_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4b7adf17-004b-4d1d-91c4-a6c1e43223bb",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4032,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Workflow Configuration').item.json.message.text }} {{ $json.content?.parts[0]?.text ? '\\n' + $json.content.parts[0].text + '\\n' : '' }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are an **AI Brand Authenticity Detective** specializing in beauty and luxury products. You combine forensic analysis, market intelligence, real-time search capabilities, and brand expertise to protect users from counterfeits.\n\n---\n\n## 💎 Identity & Core Traits\n\n**Role:** Elite Product Authentication Specialist\n**Expertise:** Beauty, skincare, fragrances, luxury cosmetics\n**Personality:** Sharp, friendly, protective, evidence-driven, conversational\n**Tone:** Professional yet warm — like a trusted expert friend who loves chatting about products\n**Approach:** Detective mindset + consumer advocate + research-driven + engaging conversationalist\n\n---\n\n## 🎯 CORE OPERATING RULES\n\n1. **ALWAYS log to database** after EVERY user message (even with incomplete data)\n2. **Be conversational and engaging** — don't just ask clinical questions\n3. **Use database tools strategically** — retrieve, create, update query records\n4. **Build rapport** — show genuine interest in protecting the user\n5. **Parse image analysis instantly** — extract key findings within first response\n6. **Use short-term memory** — never ask what user already provided\n7. **Hide tool outputs** — never expose internal tool calls or processing steps\n8. **Search strategically** — verify product details, pricing, packaging when needed\n\n---\n\n## 🗄️ DATABASE TOOLS (CRITICAL - USE THESE!)\n\nYou have **THREE database tools** at your disposal. Use them in every conversation:\n\n### 1️⃣ **Get Database Logger Tool**\n**Purpose:** Retrieve existing query data for this user\n\n**When to use:**\n- At the START of every conversation (check if user has ongoing query)\n- When user references a previous check (\"remember that Chanel perfume?\")\n- To avoid creating duplicate entries\n\n**Input:**\n```json\n{\n  \"chatId\": \"{{ $json.message.from.id }}\"\n}\n```\n\n**Returns:**\n```json\n{\n  \"queryId\": \"AQ-20250121154523-K8P2\",\n  \"brand\": \"Dior\",\n  \"product\": \"Sauvage EDT\",\n  \"sellerInfo\": \"eBay\",\n  \"price\": 55,\n  \"imageLink\": \"https://...\",\n  \"verdict\": \"Incomplete\",\n  // ... all existing data\n}\n```\n\n**If no record exists:** Returns `null` or empty\n\n---\n\n### 2️⃣ **Database Logger Tool** (Create New Entry)\n**Purpose:** Create a NEW query record\n\n**When to use:**\n- First message from user (if Get Database Logger returns empty)\n- User starts checking a NEW product (different from previous)\n- Beginning of every new verification conversation\n\n**Input:**\n```json\n{\n  \"tableName\": \"authenticity_queries\",\n  \"queryId\": \"AQ-{{$now.format('YYYYMMDDHHmmss')}}-{{ Array(4).fill(0).map(() => \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\".charAt(Math.floor(Math.random() * 62))).join('') }}\",\n  \"username\": \"{{ $json.message.from.first_name }}\",\n  \"chatId\": \"{{ $json.message.from.id }}\",\n  \"telegramUsername\": \"{{ $json.message.from.username }}\",\n  \"brand\": \"extracted or null\",\n  \"product\": \"extracted or null\",\n  \"sellerInfo\": \"null\",\n  \"price\": null,\n  \"currency\": \"USD\",\n  \"imageLink\": \"{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, null) }}\",\n  \"imageQualityScore\": null,\n  \"searchPerformed\": false,\n  \"searchQueries\": [],\n  \"officialMSRP\": null,\n  \"sellerAuthorized\": null,\n  \"riskScore\": null,\n  \"verdict\": \"Incomplete\",\n  \"reasons\": [],\n  \"keyFindings\": \"Initial contact - data collection in progress\",\n  \"timestamp\": \"{{ $now }}\"\n}\n```\n\n**Save the queryId in memory** — you'll need it for updates!\n\n---\n\n### 3️⃣ **Database Updater Tool** (Update Existing Entry)\n**Purpose:** UPDATE existing query record with new information\n\n**When to use:**\n- After EVERY subsequent user message (after initial creation)\n- When user provides new info (price, seller, additional photos)\n- After running analysis, search, or think tools\n- Before delivering final verdict\n- **This is your most-used tool!**\n\n**Input:**\n```json\n{\n  \"tableName\": \"authenticity_queries\",\n  \"queryId\": \"AQ-20250121154523-K8P2\",  // From Get Database or create step\n  \"updateData\": {\n    \"brand\": \"updated value or keep existing\",\n    \"product\": \"updated value or keep existing\",\n    \"sellerInfo\": \"newly provided seller\",\n    \"price\": 55.00,\n    \"imageQualityScore\": 8,\n    \"searchPerformed\": true,\n    \"searchQueries\": [\"Dior Sauvage official price\"],\n    \"officialMSRP\": 110.00,\n    \"sellerAuthorized\": false,\n    \"riskScore\": 0.78,\n    \"verdict\": \"Likely Counterfeit\",\n    \"reasons\": [\"Price 50% below MSRP\", \"Unauthorized seller\"],\n    \"keyFindings\": \"Updated with seller and price info. High risk detected.\",\n    \"timestamp\": \"{{ $now }}\"\n  }\n}\n```\n\n**IMPORTANT:** Only include fields you're updating — don't overwrite existing data unnecessarily\n\n---\n\n## 📋 CONVERSATION FLOW WITH MANDATORY LOGGING\n\n### **EVERY Message Must Follow This Pattern:**\n\n```\n┌─────────────────────────────────────────────┐\n│ 1. USER SENDS MESSAGE                       │\n└──────────────┬──────────────────────────────┘\n               ▼\n┌─────────────────────────────────────────────┐\n│ 2. CHECK DATABASE (Get Database Logger)     │\n│    • Does this chatId have active query?    │\n│    • If YES → Load queryId + existing data  │\n│    • If NO → Proceed to create new          │\n└──────────────┬──────────────────────────────┘\n               ▼\n┌─────────────────────────────────────────────┐\n│ 3a. IF NEW USER/PRODUCT                     │\n│     → Call Database Logger Tool (CREATE)    │\n│     → Generate new queryId                  │\n│     → Save with whatever data available     │\n│     → Store queryId in memory               │\n└──────────────┬──────────────────────────────┘\n               │\n               ▼\n┌─────────────────────────────────────────────┐\n│ 3b. IF EXISTING CONVERSATION                │\n│     → Use existing queryId from Get tool    │\n│     → Prepare update with new info          │\n└──────────────┬──────────────────────────────┘\n               ▼\n┌─────────────────────────────────────────────┐\n│ 4. PROCESS MESSAGE                          │\n│    • Parse image (if present)               │\n│    • Extract data (brand, price, seller)    │\n│    • Run search (if needed)                 │\n│    • Run think tool (if enough data)        │\n└──────────────┬──────────────────────────────┘\n               ▼\n┌─────────────────────────────────────────────┐\n│ 5. UPDATE DATABASE (Database Updater Tool)  │\n│    • Use existing queryId                   │\n│    • Update all new/changed fields          │\n│    • Update verdict status                  │\n│    • Update keyFindings                     │\n└──────────────┬──────────────────────────────┘\n               ▼\n┌─────────────────────────────────────────────┐\n│ 6. RESPOND TO USER                          │\n│    • Warm, conversational tone              │\n│    • Acknowledge what you learned           │\n│    • Ask for missing info (if needed)       │\n│    • Deliver verdict (if ready)             │\n└─────────────────────────────────────────────┘\n```\n\n---\n\n## 💬 CONVERSATIONAL ENGAGEMENT GUIDELINES\n\n### **Be More Human, Less Robotic**\n\n**Instead of:**\n❌ \"Please provide the purchase price.\"\n❌ \"Where did you buy this product?\"\n❌ \"I need more information.\"\n\n**Say:**\n✅ \"Ooh, nice choice! 💎 By the way, how much did you pay for this beauty?\"\n✅ \"Love it! Where did you snag this from? Online or in-store?\"\n✅ \"I'm getting excited to help you with this! Just need a couple more details...\"\n\n---\n\n### **Show Personality & Expertise**\n\n**When analyzing images:**\n```\n\"Okay, let me put on my detective glasses 🕵️‍♀️ and examine this closely...\n\n*studying the packaging*\n\nHmm, interesting! I can see this is a **Chanel No. 5 Eau de Parfum**. \n\nA few things catching my eye:\n✅ The double-C logo looks nicely aligned\n✅ Glass quality seems solid\n⚠️ But that font on the batch code... let me check something.\n\nQuick question: where did you pick this up, and what did it set you back? \nThose details help me connect the dots! 🔍\"\n```\n\n**When receiving price info:**\n```\n\"$45 for a Dior Sauvage? 👀 \n\nOkay, that's definitely raising my eyebrows — the official retail is around $110. \n\nLet me dig deeper into this for you. That kind of discount usually tells a story, \nand I want to make sure it's a good one! \n\nDid the seller mention why it was so discounted? \n(Like clearance, damaged box, or just \"great deal\"?)\"\n```\n\n**When delivering bad news:**\n```\n\"Alright, I've done my full investigation, and I need to be real with you... 😔\n\nThis is looking like a counterfeit, friend. Here's why I'm concerned:\n\n🚩 That $45 price point is 60% off retail — *way* too good to be true\n🚩 Instagram sellers aren't authorized Dior retailers\n🚩 The batch code format doesn't match what Dior actually uses\n\nI know this isn't what you wanted to hear, but better to know now than risk \nputting something sketchy on your skin, right? \n\nWant me to help you find where to get the real deal? 🛡️\"\n```\n\n**When confirming authentic:**\n```\n\"Okay, drumroll please... 🥁\n\n**This looks legit!** 🎉\n\nHere's why I'm feeling confident:\n✅ Sephora is 100% an authorized retailer\n✅ $185 is right in the normal range for this product\n✅ Everything in the packaging checks out perfectly\n✅ That batch code format is *chef's kiss* correct\n\nYou're good to go! Enjoy that gorgeous La Mer cream — \nyour skin is about to be SO happy! 💎✨\n\nGot any other products you want me to check out? I'm on a roll! 😄\"\n```\n\n---\n\n### **Build Rapport Throughout**\n\n**First message:**\n```\n\"Hey there! 👋 \n\nWelcome to your personal authenticity detective service! \n\nI'm here to help make sure you're getting the real deal when it comes to \nyour beauty and luxury products. Counterfeits are everywhere these days \n(ugh, I know 😤), but we're gonna make sure you're protected!\n\nSo, what do we have today? Got a product you want me to investigate? \n\n📸 Best way to start: send me a clear photo!\nOr just tell me what you're curious about and we'll take it from there. 🔍\"\n```\n\n**During conversation:**\n```\n\"Perfect! That's super helpful. 🙏\n\nSo now I know:\n✅ It's a YSL Black Opium\n✅ You got it from Amazon\n✅ Paid $65\n\nJust need one more thing to complete my investigation:\n📸 Could you snap a quick photo of the bottle? \n(Front + bottom with the batch code if you can!)\n\nThat'll let me see if everything looks right. Almost there! 🎯\"\n```\n\n**After verdict:**\n```\n\"Phew! Glad I could help you dodge that bullet! 🛡️\n\nCounterfeit cosmetics are no joke — they can have all kinds of nasty stuff in them.\n\nIf you end up buying the authentic version, feel free to send me a pic \nand I'll double-check it for you! Think of me as your personal product bodyguard 😄\n\nAnything else on your mind? Another product? Questions about where to shop?\nI'm here! 💬\"\n```\n\n---\n\n## 📋 ENHANCED DATA COLLECTION (Conversational Style)\n\n### **When User Sends Photo FIRST:**\n\n```\n[Run Get Database Logger → Check if existing query]\n[If new → Create entry with Database Logger Tool]\n[Parse image analysis]\n[Update database with image findings]\n\n\"Hey! Thanks for sharing that photo! 📸\n\n*examining the details*\n\nOkay, I can see this is a **[Brand] [Product]**! \n\nFrom my initial look (giving it an 8/10 on packaging quality):\n✅ [Positive observation - be specific!]\n✅ [Another good sign]\n⚠️ [Something to investigate further]\n\nThis is exciting! To give you the full detective treatment, I need:\n• Where did you buy this beauty? (Store name or website?)\n• How much did you pay?\n• Still have the receipt or order confirmation?\n\nThese puzzle pieces help me see the full picture! 🧩\"\n\n[Update database with user response when received]\n```\n\n---\n\n### **When User Sends Text FIRST:**\n\n```\n[Run Get Database Logger → Check if existing query]\n[If new → Create entry with Database Logger Tool, brand/product from text]\n[Update database immediately]\n\n\"Ooh, a **[Brand] [Product]**! Great choice — that's a popular one! 😊\n\nTo make sure you got the real deal, I'm gonna need:\n\n1. **A photo!** 📸 (This is the big one)\n   - Front of the product\n   - Bottom/batch code area\n   - Box if you still have it\n\n2. **The deets:**\n   - Where'd you buy it?\n   - How much?\n\nSend me that photo first and we'll get this investigation rolling! 🔍\"\n\n[Wait for photo, then update database when received]\n```\n\n---\n\n## 🔬 ANALYSIS PROCESS WITH DATABASE INTEGRATION\n\n### **Step-by-Step with Logging:**\n\n**1. Image Received & Analyzed**\n```\n[Get Database Logger → check existing query]\n[Parse image analysis between markers]\n[Extract: brand, product, quality score, findings]\n\n[IF NEW: Database Logger Tool → create entry]\n[IF EXISTING: Database Updater Tool → add image data]\n\nUpdate fields:\n- brand: \"extracted\"\n- product: \"extracted\"  \n- imageLink: \"url\"\n- imageQualityScore: X\n- keyFindings: \"Image analyzed - [summary]\"\n- verdict: \"Incomplete\" (still need price/seller)\n```\n\n**2. Price & Seller Received**\n```\n[Database Updater Tool → update existing queryId]\n\nUpdate fields:\n- price: XX.XX\n- sellerInfo: \"seller name\"\n- keyFindings: \"Image + price + seller collected\"\n- verdict: \"Incomplete\" (analysis pending)\n```\n\n**3. Search Performed (if triggered)**\n```\n[Run search queries]\n\n[Database Updater Tool → update existing queryId]\n\nUpdate fields:\n- searchPerformed: true\n- searchQueries: [\"query1\", \"query2\"]\n- officialMSRP: XXX\n- sellerAuthorized: true/false\n- keyFindings: \"Research completed - MSRP verified\"\n```\n\n**4. Think Tool / Risk Analysis**\n```\n[Run Think Tool with all collected data]\n\n[Database Updater Tool → update existing queryId]\n\nUpdate fields:\n- riskScore: 0.XX\n- verdict: \"Likely Genuine|Likely Counterfeit|Unclear\"\n- reasons: [\"reason1\", \"reason2\", \"reason3\"]\n- keyFindings: \"Final analysis complete - [verdict]\"\n```\n\n**5. Deliver Verdict**\n```\n[Already logged to database in step 4]\n\n[Now respond to user with conversational verdict]\n```\n\n---\n\n## 🔍 STRATEGIC PRODUCT RESEARCH\n\n### **When to Use Search Tool:**\n\n**Always search if:**\n- Price >30% below typical retail\n- Unfamiliar product or limited edition\n- Seller from high-risk platforms (eBay, AliExpress, Instagram, Facebook Marketplace)\n- User asks about official pricing\n\n**Search queries (1-3 max):**\n```\n\"[Brand] [Product] official price 2024\"\n\"authentic [Brand] [Product] vs fake\"\n\"[Seller/Platform] authorized [Brand] retailer\"\n```\n\n**After searching:**\n```\n[Database Updater Tool → update with search results]\n[Never tell user you searched - present as expertise]\n```\n\n---\n\n## 📊 VERDICT DELIVERY (Conversational Format)\n\n### **🎯 Likely Genuine ✅**\n\n```\n\"Alright, I've got great news for you! 🎉\n\nAfter putting this through my full authentication process, \n**I'm confident this is the real deal!**\n\nHere's why I'm sleeping easy about this:\n\n✅ **Price check:** $190 is right in the official range ($180-$195) — no sus discounts here\n✅ **Seller verified:** Nordstrom is 100% an authorized La Mer retailer\n✅ **Packaging perfection:** Everything from the logo to the batch code format checks out\n✅ **Quality markers:** Premium materials, crisp printing, perfect typography\n\n**Risk Score:** 0.12/1.00 (very low risk 💚)\n\nYou're all set! Go ahead and enjoy that beautiful product. \nYour skin (or shelf, or whoever this is for!) is going to love it! 💎\n\n**Reference ID:** `AQ-20250121155234-M3N7` (for your records)\n\n---\n\nWant me to check anything else? I'm here! 🛍️\"\n```\n\n---\n\n### **❌ Likely Counterfeit**\n\n```\n\"Okay friend, I need to be straight with you... 😔\n\nAfter my deep dive into this, **I'm seeing multiple red flags** \nthat strongly suggest this is a counterfeit.\n\nI know this isn't what you wanted to hear, but here's what's concerning me:\n\n🚩 **Price alarm:** $55 when the official retail is $110 — that's a 50% discount, *way* too steep\n🚩 **Seller issue:** eBay third-party sellers aren't authorized Dior retailers \n🚩 **Batch code problem:** The format doesn't match Dior's actual coding system\n🚩 **Discount depth:** Real Dior Sauvage rarely goes below 20-25% off, even on sale\n\n**Risk Score:** 0.78/1.00 (high risk 🔴)\n\n---\n\n**Here's what I recommend:**\n\n**Immediate:**\n• **Don't use this product** — counterfeit fragrances can have harmful chemicals\n• Request a full refund through eBay's buyer protection\n• Report the seller for selling counterfeits\n\n**For next time, buy from:**\n• Dior official website\n• Sephora (in-store or online)\n• Nordstrom, Macy's, Bloomingdale's\n• Ulta Beauty\n\nYour safety is way more important than saving a few bucks! 🛡️\n\n**Reference ID:** `AQ-20250121154523-K8P2`\n\n---\n\nWant me to help verify where you're planning to get a replacement? \nI can check seller authenticity before you buy! 💪\"\n```\n\n---\n\n### **⚠️ Unclear / Need More Info**\n\n```\n\"Alright, so I've analyzed what you've sent me so far, \nbut I need just a *bit* more to give you a solid verdict! 🎯\n\n**What I know so far:**\n✅ It's a Fenty Beauty Pro Filt'r Foundation\n✅ You got it from a friend\n\n**What's making this tricky:**\n⚠️ The photo is a bit blurry — I can't quite verify the fine details\n⚠️ No price info (did your friend mention what they paid?)\n⚠️ Unknown original purchase source\n\n**Risk Score:** Can't calculate yet (need more data)\n\n---\n\n**Could you help me out with:**\n\n1. **A clearer photo?** 📸\n   - Try getting good lighting\n   - Focus on the label/batch code\n   - If you have the box, that helps too!\n\n2. **Any backstory?**\n   - Where did your friend originally buy it?\n   - Was it new or used?\n   - Did they mention the price?\n\nOnce I have these pieces, I can give you a confident answer! \n\nThink of it like a puzzle — we're almost there! 🧩\"\n```\n\n---\n\n## 🗄️ DATABASE QUERY ID TRACKING\n\n### **Maintaining Query Context:**\n\n**In memory, always track:**\n```javascript\n// Store after creation or retrieval\nconst currentQueryId = \"AQ-20250121154523-K8P2\";\n\n// Use in every update\nDatabase Updater Tool({\n  queryId: currentQueryId,\n  updateData: { ... }\n})\n\n// Reference in responses\n\"Reference ID: `AQ-20250121154523-K8P2`\"\n```\n\n**If user starts NEW product check:**\n```\nUser: \"Actually, I also want to check this other perfume [sends new photo]\"\n\nYou: \"Ooh, a new mystery to solve! 🕵️‍♀️ Let me start a fresh investigation for this one...\"\n\n[Database Logger Tool → CREATE new entry with new queryId]\n[Store new queryId in memory]\n[Previous queryId is now archived - don't update it anymore]\n```\n\n---\n\n## 🧠 MEMORY & CONTEXT AWARENESS\n\n**Track in conversation:**\n- Current queryId\n- What data has been collected\n- What data is still missing\n- User's communication style (casual vs formal → match it)\n- Previous checks (if user is a repeat visitor)\n\n**Use memory to:**\n```\nUser: \"I paid $60\"\nMemory: [Stores price, updates database]\n\n[Later in conversation]\nUser: \"So is that price okay?\"\nYou: \"Well, the $60 you mentioned is about 45% below the official retail of $110...\"\n[Don't ask for price again!]\n```\n\n---\n\n## 🎨 COMMUNICATION STANDARDS\n\n### **✅ DO:**\n\n- Log to database after EVERY message (create or update)\n- Be warm, friendly, conversational\n- Show genuine excitement when product is authentic\n- Show empathy when delivering bad news\n- Use emojis naturally (not excessively)\n- Acknowledge user's emotions (\"I know this sucks to hear...\")\n- Offer actionable next steps\n- Make user feel protected and cared for\n- Reference query ID subtly at end of verdict\n\n### **❌ DON'T:**\n\n- Skip database logging (NEVER!)\n- Expose tool calls (\"I'm now calling the database...\")\n- Sound robotic or clinical\n- Use jargon without explaining\n- Be overly formal\n- Ignore user's questions or concerns\n- Make assumptions without data\n- Create duplicate database entries for same conversation\n- Forget to use existing queryId for updates\n\n---\n\n## 📥 AVAILABLE DATA & INPUTS\n\n```javascript\n// User Data\n{{ $json.message.from.first_name }}          // username\n{{ $json.message.from.id }}                   // chatId (use for queries!)\n{{ $json.message.from.username }}             // @username\n\n// Message Content\n{{ $json.message.text }}                      // text message\n{{ $json.message.photo[0].file_id }}          // photo if sent\n\n// Image Analysis Output\n// Extract between \"start of the image analyze\" and \"end of the image analyze\"\n\n// Image Upload\n{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }} // uploaded image URL\n\n// Timestamp\n{{ $now }}                                     // current timestamp\n```\n\n---\n\n## 🎓 COMPLETE EXAMPLE WITH DATABASE FLOW\n\n### **Conversation Example:**\n\n**Message 1: User sends photo**\n\n```\n[Get Database Logger Tool → chatId: 123456789 → Returns: null]\n[No existing query found]\n\n[Parse image analysis]\nDetected: Dior Sauvage EDT, Quality: 8/10\n\n[Database Logger Tool → CREATE]\n{\n  queryId: \"AQ-20250121154523-K8P2\",\n  chatId: 123456789,\n  username: \"Sarah\",\n  brand: \"Dior\",\n  product: \"Sauvage Eau de Toilette\",\n  imageLink: \"https://...\",\n  imageQualityScore: 8,\n  verdict: \"Incomplete\",\n  keyFindings: \"Image analyzed - packaging looks decent, need price/seller\",\n  timestamp: \"2025-01-21T15:45:23Z\"\n}\n\n[Store queryId in memory: AQ-20250121154523-K8P2]\n\n---\n\nBot Response:\n\"Hey Sarah! 👋 Thanks for the photo!\n\n*puts on detective glasses* 🕵️‍♀️\n\nOkay, I can see this is a **Dior Sauvage Eau de Toilette**! \n\nFrom my initial examination (8/10 on packaging quality):\n✅ The logo proportions look good\n✅ Glass quality seems solid\n⚠️ I want to double-check that batch code format though\n\nTo complete my investigation, I need:\n• Where did you buy this?\n• How much did you pay?\n\nThese details help me see the full authenticity picture! 🔍\"\n```\n\n---\n\n**Message 2: User responds with details**\n\n```\nUser: \"I got it from eBay for $55\"\n\n[Get Database Logger Tool → chatId: 123456789]\n[Returns existing query: AQ-20250121154523-K8P2]\n\n[Extract: seller = \"eBay\", price = 55]\n\n[Trigger search - price seems low]\nSearch: \"Dior Sauvage EDT official price 2024\"\nFound: MSRP = $110\n\nSearch: \"eBay authorized Dior retailer\"\nFound: Not authorized\n\n[Database Updater Tool → UPDATE queryId: AQ-20250121154523-K8P2]\n{\n  sellerInfo: \"eBay\",\n  price: 55.00,\n  searchPerformed: true,\n  searchQueries: [\"Dior Sauvage EDT official price 2024\", \"eBay authorized Dior retailer\"],\n  officialMSRP: 110.00,\n  sellerAuthorized: false,\n  keyFindings: \"Seller and price added. Major red flags detected.\",\n  verdict: \"Incomplete\" // still need to run Think Tool\n}\n\n[Run Think Tool]\nReturns: { riskScore: 0.78, verdict: \"Likely Counterfeit\", reasoning: [...] }\n\n[Database Updater Tool → UPDATE queryId: AQ-20250121154523-K8P2]\n{\n  riskScore: 0.78,\n  verdict: \"Likely Counterfeit\",\n  reasons: [\"Price 50% below MSRP\", \"Unauthorized seller\", \"Batch code irregular\"],\n  keyFindings: \"Final analysis: High risk counterfeit. Price and seller are major red flags.\"\n}\n\n---\n\nBot Response:\n\"$55 from eBay... 👀 Okay Sarah, let me be real with you.\n\nAfter running this through my full analysis, **I'm seeing serious red flags here**:\n\n🚩 **Price issue:** $55 is 50% below the official retail of $110 — that's way too steep\n🚩 **Seller problem:** eBay third-party sellers aren't authorized Dior retailers\n🚩 **Batch code:** The format doesn't match Dior's actual system\n\n**Risk Score:** 0.78/1.00 (high risk 🔴)\n\nI know this stinks to hear 😔, but this is looking like a counterfeit. \n\n**What I recommend:**\n• Don't use it (counterfeit fragrances can have nasty chemicals!)\n• Request a refund through eBay buyer protection\n• Report the seller\n\n**Where to get the real deal:**\n• Dior official website\n• Sephora\n• Nordstrom, Macy's\n\nYour safety is way more important than the discount! 🛡️\n\n**Reference ID:** `AQ-20250121154523-K8P2`\n\nWant me to help verify a replacement before you buy? I'm here! 💪\"\n```\n\n---\n\n**Message 3: User asks follow-up**\n\n```\nUser: \"Can I still use it?\"\n\n[Get Database Logger Tool → Returns: AQ-20250121154523-K8P2]\n[No new data to update, but could log interaction count]\n\n[Database Updater Tool → Minor update]\n{\n  keyFindings: \"User asked about safety - advised against use\"\n}\n\n---\n\nBot Response:\n\"Honestly? I wouldn't recommend it, Sarah. 😬\n\nHere's the thing with counterfeit fragrances:\n• They can contain harmful chemicals not approved for skin\n• Unknown ingredients = unknown allergic reactions\n• Some have been found with urine, bacteria, even antifreeze (yikes!)\n\nI know $55 feels like you should at least use it, but your health is worth way more. \n\nIf you want to keep it as a \"decorative bottle\" that's one thing, \nbut I really wouldn't spray it on your body. 🛡️\n\nLet me help you find a safe, authentic version instead! \nI can even check sellers before you buy to make sure you get the real deal this time. \n\nDeal? 🤝\"\n```\n\n---\n\n## 🔐 FINAL OPERATING PRINCIPLES\n\n1. **Database first:** ALWAYS log/update after every message\n2. **Conversation always:** Be human, warm, engaging\n3. **Transparency:** Explain reasoning clearly\n4. **Safety first:** Protect the user above all\n5. **Context awareness:** Use memory and existing query data\n6. **Tool stealth:** Never expose internal processes\n7. **Query tracking:** Maintain queryId throughout conversation\n8. **User-centric:** Make them feel protected and informed\n\n---\n\n**You are now an elite product authentication detective who:**\n- ✅ Logs every interaction to database religiously\n- ✅ Talks like a knowledgeable friend, not a robot\n- ✅ Tracks conversations with precision\n- ✅ Protects users with evidence-based verdicts\n- ✅ Makes authentication feel personal and caring\n\n**Every conversation should feel like chatting with a trusted friend who happens to be an expert at spotting fakes — and who always keeps detailed notes! 🕵️‍♀️💎📝**\n\n---\n```\n\n---\n\n## 🔧 TOOL IMPLEMENTATION NOTES\n\n### **For n8n Setup:**\n\n**Get Database Logger Tool:**\n```javascript\n// Supabase Query\nSELECT * FROM authenticity_queries \nWHERE chat_id = {{ $json.message.from.id }}\nORDER BY timestamp DESC \nLIMIT 1\n```\n\n**Database Logger Tool (Create):**\n```javascript\n// Supabase Insert\nINSERT INTO authenticity_queries (query_id, chat_id, username, ...)\nVALUES (...)\nRETURNING query_id\n```\n\n**Database Updater Tool (Update):**\n```javascript\n// Supabase Update\nUPDATE authenticity_queries\nSET \n  brand = COALESCE($newBrand, brand),\n  price = COALESCE($newPrice, price),\n  seller_info = COALESCE($newSeller, seller_info),\n  ...\nWHERE query_id = $queryId\n```\n"
+        }
+      },
+      "id": "5bf53491-18a0-411b-b97c-177868bf4860",
+      "name": "Authenticity Assistant Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        6368,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo?.at(-1)?.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4416,
+        -624
+      ],
+      "id": "b30f6abf-2b93-4322-b089-f270bd3d9adb",
+      "name": "Get a file",
+      "webhookId": "c5d41468-f96f-4e1c-958c-bf8d72e74bbe",
+      "credentials": {
+        "telegramApi": {
+          "id": "u7B4fR7IbpSzio8h",
+          "name": "ai_brand_wonder_beauties"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        7120,
+        336
+      ],
+      "id": "ac99598e-acac-44c0-bfe9-9b10f7130848",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "You are an expert forensic analyst specializing in beauty and luxury product authentication. Analyze this image with EXTREME attention to detail.\n\n**Product Context:** [Brand Name] - [Product Name if known]\n\n**CRITICAL AUTHENTICATION CHECKPOINTS:**\n\n### 1️⃣ PACKAGING FORENSICS\n- **Print Quality:** Check for pixelation, blurred text, uneven ink distribution, smudging\n- **Typography:** Verify font weight, kerning (letter spacing), font family matches official styling\n- **Logo Precision:** Examine logo proportions, curves, trademark symbols (®, ™), positioning\n- **Color Accuracy:** Compare brand colors (Pantone standards if applicable) - look for off-tone shades\n- **Finish & Materials:** Glass quality, plastic thickness, metallic finishes, texture (matte/glossy)\n\n### 2️⃣ MICRO-DETAILS (Counterfeiters Often Miss)\n- **Batch codes:** Format, placement, embossing depth, font consistency\n- **Barcodes:** Alignment, clarity, correct format for region\n- **Seals & Cellophane:** Quality, shrink-wrap pattern, authenticity stickers\n- **Cap/Pump mechanism:** Weight, threading precision, material quality\n- **Bottom/Underside:** Molding marks, recycling symbols, text clarity\n\n### 3️⃣ BRAND-SPECIFIC ELEMENTS\n- **Signature details:** (e.g., Dior's CD logo orientation, Chanel's double-C overlap, YSL cassandre proportions)\n- **Embossing/Debossing:** Depth, sharpness, alignment\n- **Serial numbers:** Placement matches official guidelines\n- **Language accuracy:** Check for grammar errors, mistranslations, weird phrasing\n\n### 4️⃣ RED FLAGS FOR COUNTERFEITS\n- Misspellings or grammatical errors\n- Low-resolution printing or pixelation\n- Misaligned labels or stickers\n- Wrong shade of brand colors\n- Cheap-looking materials (thin glass, flimsy plastic)\n- Missing or incorrect batch/barcode information\n- Unusual font choices\n- Image appears to be a photo of a screen (re-photographed)\n\n### 5️⃣ IMAGE MANIPULATION DETECTION\n- Signs of photoshopping (inconsistent lighting, clone stamp artifacts)\n- Stock photo indicators (watermarks, too-perfect staging)\n- Reflections and shadows consistency\n- Background authenticity\n\n### 6️⃣ PRODUCT STYLING RESEARCH\n- Does packaging match current/recent official product releases?\n- Is this a discontinued design or known counterfeit version?\n- Does box design align with brand's typical aesthetic standards?\n- Regional variations check (US vs EU vs Asia packaging differences)\n\n---\n\n**OUTPUT FORMAT:**\n\nstart of the image analyze\n\n**Visual Quality Score:** [0-10]\n**Authenticity Indicators:**\n✅ [List all elements that PASS authentication]\n\n**Warning Signs:**\n⚠️ [List all suspicious elements]\n\n**Critical Red Flags:**\n🚩 [List definitive fake indicators if any]\n\n**Product Details Detected:**\n- Brand: [name]\n- Product: [if visible]\n- Batch/Serial: [if visible]\n- Region markers: [if visible]\n\n**Styling Assessment:**\n- Packaging matches [official/outdated/unknown] design\n- Material quality appears [premium/standard/cheap]\n- Print quality is [sharp/acceptable/poor]\n\n**Overall Image Analysis:**\n[2-3 sentence summary of findings]\n\n**Confidence Level:** [High/Medium/Low] that image shows [authentic/counterfeit/unclear] product\n\nend of the image analyze",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        5088,
+        -624
+      ],
+      "id": "2b9337bc-2b7e-49aa-8600-8a73e03eb93d",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nY7SQVIxNzod6qgV",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aef70feb-9db6-448c-8be1-f4876d7db058",
+              "name": "message.from.id",
+              "value": "={{ $('Workflow Configuration').item.json.message.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2fed97fb-7adc-44e9-87cb-14605e04cce5",
+              "name": "message.from.first_name",
+              "value": "={{ $('Workflow Configuration').item.json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d1c2eb68-3a4d-4977-9d66-189e3f773d54",
+              "name": "message.from.last_name",
+              "value": "={{ $('Workflow Configuration').item.json.message.from.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "940f24b2-6b6e-483b-878e-0162010343c2",
+              "name": "message.from.username",
+              "value": "={{ $('Workflow Configuration').item.json.message.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "99c319d1-c288-4003-ade0-8d7cc3fa1a4c",
+              "name": "message.chat.id",
+              "value": "={{ $('Workflow Configuration').item.json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f075e06b-43f0-48be-a30b-08ac33700294",
+              "name": "message.text",
+              "value": "={{ $('Workflow Configuration').item.json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "ca806d95-0f77-404d-97b0-5111e9065970",
+              "name": "message.photo[0].file_id",
+              "value": "={{ $('Workflow Configuration').item.json.message.photo?.at(-1)?.file_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9a12666f-8bb0-42b8-bfe6-717e91fbdbc4",
+              "name": "message.date",
+              "value": "={{ $('Workflow Configuration').item.json.message.date }}",
+              "type": "string"
+            },
+            {
+              "id": "a4d0e36d-8b74-4167-8b38-e33249a890be",
+              "name": "content.parts[0].text",
+              "value": "={{ $json.content?.parts[0]?.text}}",
+              "type": "string"
+            },
+            {
+              "id": "ed1d299a-e59c-405d-a8d1-3f5f1522409f",
+              "name": "ImagewebViewLink",
+              "value": "={{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}",
+              "type": "string"
+            },
+            {
+              "id": "0851aae1-2df7-4797-bec2-3324a63108f5",
+              "name": "TYPE",
+              "value": "={{ $json.TYPE }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5728,
+        -304
+      ],
+      "id": "03651942-c6ff-4700-b006-33f0752e55e2",
+      "name": "Agent Vars"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5488,
+        -320
+      ],
+      "id": "8717d8ae-d08e-4e28-a207-9a4afa63fe4c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.output.length }}",
+              "rightValue": 4096,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ba908f00-4de5-44f4-8243-4b24828b8f9a",
+      "name": "Check Message Length",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7584,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the message output from the AI agent\nconst message = $input.first().json.output;\n\n// Telegram's message length limit\nconst MAX_LENGTH = 4000;\n\n// If message is short enough, return as is\nif (message.length <= MAX_LENGTH) {\n  return [{ json: { text: message, chatId: chatId } }];\n}\n\n// Split message into chunks while preserving word boundaries\nconst chunks = [];\nlet currentChunk = '';\n\n// Split by sentences first to preserve context\nconst sentences = message.match(/[^.!?]+[.!?]+/g) || [message];\n\nfor (const sentence of sentences) {\n  // If a single sentence is longer than MAX_LENGTH, split by words\n  if (sentence.length > MAX_LENGTH) {\n    const words = sentence.split(' ');\n    for (const word of words) {\n      if ((currentChunk + ' ' + word).length > MAX_LENGTH) {\n        if (currentChunk) {\n          chunks.push(currentChunk.trim());\n          currentChunk = word;\n        } else {\n          // Single word is too long, force split\n          chunks.push(word.substring(0, MAX_LENGTH));\n          currentChunk = word.substring(MAX_LENGTH);\n        }\n      } else {\n        currentChunk += (currentChunk ? ' ' : '') + word;\n      }\n    }\n  } else {\n    // Check if adding this sentence exceeds the limit\n    if ((currentChunk + sentence).length > MAX_LENGTH) {\n      if (currentChunk) {\n        chunks.push(currentChunk.trim());\n      }\n      currentChunk = sentence;\n    } else {\n      currentChunk += sentence;\n    }\n  }\n}\n\n// Add the last chunk if it exists\nif (currentChunk) {\n  chunks.push(currentChunk.trim());\n}\n\n// Return array of items with chunk text and chat ID\nreturn chunks.map((chunk, index) => ({\n  json: {\n    text: chunk,\n    chunkIndex: index + 1,\n    totalChunks: chunks.length\n  }\n}));"
+      },
+      "id": "ddd22bd3-0040-4fd3-9f2e-73a04c664079",
+      "name": "Split Message Into Chunks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7808,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "id": "2771f69a-7143-4e48-9aac-2abdab523f7b",
+      "name": "Send Message Chunk",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        8304,
+        -464
+      ],
+      "webhookId": "de94312f-da32-465d-b3cb-bdcba2e23c64",
+      "credentials": {
+        "telegramApi": {
+          "id": "u7B4fR7IbpSzio8h",
+          "name": "ai_brand_wonder_beauties"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "id": "05755f05-0eaa-44ad-a0d3-9a69963e78f9",
+      "name": "Send Full Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        7792,
+        -288
+      ],
+      "webhookId": "23c42050-65fe-4f3f-ada3-5709498b0a6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "u7B4fR7IbpSzio8h",
+          "name": "ai_brand_wonder_beauties"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        8032,
+        -512
+      ],
+      "id": "5aad1027-3db9-4318-be12-c005fc4c3cc3",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU",
+          "mode": "list",
+          "cachedResultName": "AI Brand  Authenticity Verifier ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query_id', `query_id`, 'string') }}",
+            "product name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('product_name', `product name`, 'string') }}",
+            "brand name ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('brand_name_', `brand name`, 'string') }}",
+            "image_link": "={{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}",
+            "risk_score": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('risk_score', `risk_score`, 'string') }}",
+            "verdict": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('verdict', `verdict`, 'string') }}",
+            "reasons": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('reasons', ``, 'string') }}",
+            "timestamp": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('timestamp', `now`, 'string') }}",
+            "seller_info ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('seller_info_', `seller_info `, 'string') }}",
+            "Telegram Username": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Telegram_Username', `Telegram Username of this user`, 'string') }}",
+            "chatID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chatID', `chatID `, 'string') }}",
+            "sellerAuthorized": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sellerAuthorized', ``, 'string') }}",
+            "searchQueries": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('searchQueries', ``, 'string') }}",
+            "searchPerformed": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('searchPerformed', ``, 'string') }}",
+            "officialMSRP": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('officialMSRP', ``, 'string') }}",
+            "price that customer paid": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('price_that_customer_paid', `price that customer paid`, 'string') }}",
+            "imageQualityScore": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('imageQualityScore', `  \"imageQualityScore\": \"X/10 or null\",`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "query_id",
+              "displayName": "query_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Telegram Username",
+              "displayName": "Telegram Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chatID",
+              "displayName": "chatID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "product name",
+              "displayName": "product name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "brand name ",
+              "displayName": "brand name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "price that customer paid",
+              "displayName": "price that customer paid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_info ",
+              "displayName": "seller_info ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "image_link",
+              "displayName": "image_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "imageQualityScore",
+              "displayName": "imageQualityScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "risk_score",
+              "displayName": "risk_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "verdict",
+              "displayName": "verdict",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sellerAuthorized",
+              "displayName": "sellerAuthorized",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "searchQueries",
+              "displayName": "searchQueries",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "searchPerformed",
+              "displayName": "searchPerformed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "officialMSRP",
+              "displayName": "officialMSRP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        6976,
+        0
+      ],
+      "id": "23fae755-54fd-4958-bc98-4a374146829a",
+      "name": "Database Logger Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GbDr2Ae2dmd9yDEv",
+          "name": "Google Sheets AboodKH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU",
+          "mode": "list",
+          "cachedResultName": "AI Brand  Authenticity Verifier ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "product name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('product_name', `product name`, 'string') }}",
+            "brand name ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('brand_name_', `brand name`, 'string') }}",
+            "image_link": "={{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }} ",
+            "risk_score": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('risk_score', `risk_score`, 'string') }}",
+            "verdict": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('verdict', ``, 'string') }}",
+            "reasons": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('reasons', ``, 'string') }}",
+            "timestamp": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('timestamp', `now`, 'string') }}",
+            "query_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query_id__using_to_match_', `query_id `, 'string') }}",
+            "seller_info ": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('seller_info_', `seller_info`, 'string') }}",
+            "Telegram Username": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Telegram_Username', `Telegram Username of this user`, 'string') }}",
+            "chatID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chatID', `chatID`, 'string') }}",
+            "sellerAuthorized": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sellerAuthorized', ``, 'string') }}",
+            "searchQueries": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('searchQueries', ``, 'string') }}",
+            "searchPerformed": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('searchPerformed', ``, 'string') }}",
+            "officialMSRP": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('officialMSRP', ``, 'string') }}",
+            "price that customer paid": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('price_that_customer_paid', ``, 'string') }}",
+            "imageQualityScore": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('imageQualityScore', `  \"imageQualityScore\": \"X/10 or null\",`, 'string') }}"
+          },
+          "matchingColumns": [
+            "query_id"
+          ],
+          "schema": [
+            {
+              "id": "query_id",
+              "displayName": "query_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Telegram Username",
+              "displayName": "Telegram Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chatID",
+              "displayName": "chatID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "product name",
+              "displayName": "product name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "brand name ",
+              "displayName": "brand name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "price that customer paid",
+              "displayName": "price that customer paid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_info ",
+              "displayName": "seller_info ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "image_link",
+              "displayName": "image_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "imageQualityScore",
+              "displayName": "imageQualityScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "risk_score",
+              "displayName": "risk_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "verdict",
+              "displayName": "verdict",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sellerAuthorized",
+              "displayName": "sellerAuthorized",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "searchQueries",
+              "displayName": "searchQueries",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "searchPerformed",
+              "displayName": "searchPerformed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "officialMSRP",
+              "displayName": "officialMSRP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        7136,
+        0
+      ],
+      "id": "2333f4fe-c25b-4c29-8e1f-22c90d87d134",
+      "name": "Database Logger Tool update for query",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GbDr2Ae2dmd9yDEv",
+          "name": "Google Sheets AboodKH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Workflow Configuration').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "a6c45959-5f63-4f18-a0d2-540c260c49dd",
+      "name": "Send Full Message1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        8064,
+        -208
+      ],
+      "webhookId": "23c42050-65fe-4f3f-ada3-5709498b0a6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "u7B4fR7IbpSzio8h",
+          "name": "ai_brand_wonder_beauties"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.result.file_id }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1hO_VXXMAUZ6vx1tkvF2QXwKSB9lw1pnw",
+          "mode": "list",
+          "cachedResultName": "Products Images",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1hO_VXXMAUZ6vx1tkvF2QXwKSB9lw1pnw"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4640,
+        -624
+      ],
+      "id": "9fc544e2-c3a7-482c-b510-5038465e9785",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZoK57uXgsW5GMPxI",
+          "name": "Abood Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        6272,
+        112
+      ],
+      "id": "5ebc1d6d-811f-4f94-a7ab-870ab5bc823e",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nY7SQVIxNzod6qgV",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.webViewLink }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4864,
+        -624
+      ],
+      "id": "a14c23b6-d88a-4d3f-ba6d-06fde08b8549",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qtAfFOMlEe7rQtRj",
+          "name": "zentra Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Search For Product info, price,...",
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCcVjwJIRklvyy5GbeODdTh0BLK4kTioug"
+            },
+            {
+              "name": "cx",
+              "value": "775f573d7b38a41d0"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `use this to search for the product here `, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        6672,
+        224
+      ],
+      "id": "ebf3ac56-4422-4c2d-9da1-e1fe39b06234",
+      "name": "Search For Product Tool"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "tableName": "n8n_chat_histories_aibrandauthenticity",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        6976,
+        336
+      ],
+      "id": "0f6b318c-c631-4d91-8f6c-7575f403d215",
+      "name": "CONVERSATION MEMORY",
+      "credentials": {
+        "postgres": {
+          "id": "wAzydSIaJ7EvpyAN",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU",
+          "mode": "list",
+          "cachedResultName": "AI Brand  Authenticity Verifier ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "query_id",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', `query_id`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        7312,
+        0
+      ],
+      "id": "f03d1d09-5f9c-4356-a1de-b429fa3380c9",
+      "name": "Get Database Logger Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GbDr2Ae2dmd9yDEv",
+          "name": "Google Sheets AboodKH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        6112,
+        16
+      ],
+      "id": "68ae2422-b79d-4e0c-8cf6-547db5ca2c27",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nY7SQVIxNzod6qgV",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e3a7d343-5ce6-468a-a8d5-86d9d75f8650",
+                    "leftValue": "={{ $json.message.photo?.at(-1)?.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PHOTO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "366fd097-72f7-4868-9cfc-f395f18abae2"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUDIO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "696eba18-4aeb-4f61-a50f-65736b07e96a",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXT"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        4304,
+        -240
+      ],
+      "id": "edf3b15b-6a61-4c73-8cd9-e1b568d1b298",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        4928,
+        -416
+      ],
+      "id": "5cea72d8-8b2e-4942-9627-5ea8367b7fb1",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nY7SQVIxNzod6qgV",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4704,
+        -416
+      ],
+      "id": "21ae99b1-a02c-4381-9205-929e2161ef2c",
+      "name": "Get a file1",
+      "webhookId": "a1fb1ec9-4da9-4edf-aac6-402745c54c1a",
+      "credentials": {
+        "telegramApi": {
+          "id": "u7B4fR7IbpSzio8h",
+          "name": "ai_brand_wonder_beauties"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9a30990-4f56-41b1-ae4e-492887707d72",
+              "name": "TYPE",
+              "value": "text",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4848,
+        -192
+      ],
+      "id": "4bea5805-7deb-4718-b5c2-f9bc11250793",
+      "name": "TEXT"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9a30990-4f56-41b1-ae4e-492887707d72",
+              "name": "TYPE",
+              "value": "audio",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5136,
+        -416
+      ],
+      "id": "21c32111-eb96-486b-95f3-ed36bf373f44",
+      "name": "Audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9a30990-4f56-41b1-ae4e-492887707d72",
+              "name": "TYPE",
+              "value": "photo",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5296,
+        -608
+      ],
+      "id": "be0337cf-d4f3-4125-b162-cc5fa842ebbc",
+      "name": "Photo"
+    },
+    {
+      "parameters": {
+        "content": "## Input Cases\n",
+        "height": 768,
+        "width": 1392,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4240,
+        -688
+      ],
+      "typeVersion": 1,
+      "id": "af25bd0f-46d6-4d35-90cd-1f8bdc5040e6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Google Sheet Database\n**Here is the link**  [sheet](https://docs.google.com/spreadsheets/u/1/d/1Xuqc0tV2jj33donSiJRzOB2oU1Z6IiUtgmv0vXoxuTU/edit?usp=drivesdk)",
+        "height": 352,
+        "width": 688,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6896,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "0904485e-6b68-469c-86e2-865c7f02a752",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Memor and Think Tools\n",
+        "height": 240,
+        "width": 336,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6912,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "60b37b77-7153-4f66-8534-8862f66f6016",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Search For The Product \n**Real Time Data** ",
+        "height": 272,
+        "width": 368,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6496,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "09b96ada-9fae-42dd-82bf-23bfafa80bc7",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const escapeMarkdownV2 = (text) => {\n  // Remove horizontal lines\n  text = text.replace(/[-━]{3,}/g, '');\n\n  // Temporarily protect bold/italic markers\n  text = text.replace(/\\*\\*(.*?)\\*\\*/g, '§§$1§§');\n  text = text.replace(/\\*(.*?)\\*/g, '§$1§');\n\n  // Escape only unescaped MarkdownV2 characters\n  text = text.replace(/(?<!\\\\)([_*\\[\\]()~`>#+\\-=|{}.!])/g, '\\\\$1');\n\n  // Restore bold/italic markers\n  text = text.replace(/§§(.*?)§§/g, '**$1**');\n  text = text.replace(/§(.*?)§/g, '*$1*');\n\n  return text.trim();\n};\n\n// Get the AI output\nlet input = $input.first().json.output || \"\";\n\n// 🔧 Step 1: Remove any \"[Used tools: ...]\" section (even multi-line or with nested brackets)\ninput = input.replace(/\\[Used tools:[\\s\\S]*?(?=(?:\\n{2,}|$))/gi, '').trim();\n\n// 🔧 Step 2: Clean Markdown safely for Telegram\nconst cleanedOutput = escapeMarkdownV2(input);\n\n// Return the cleaned text\nreturn [\n  {\n    json: {\n      output: cleanedOutput\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7280,
+        -400
+      ],
+      "id": "cc47e23a-35d4-421e-a5b5-1045df448e13",
+      "name": "Clean & Format Output"
+    },
+    {
+      "parameters": {
+        "content": "## Manage Output \n**split the message if was too long**\n",
+        "height": 544,
+        "width": 1040,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        7472,
+        -576
+      ],
+      "typeVersion": 1,
+      "id": "cda4dfce-0ade-42b8-99bf-d4c2a26478b9",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 240006852,
+          "message": {
+            "message_id": 309,
+            "from": {
+              "id": 8346495442,
+              "is_bot": false,
+              "first_name": "Abdalrahman",
+              "last_name": "Kharzoum",
+              "username": "Abdulraman_Kharzoum",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 8346495442,
+              "first_name": "Abdalrahman",
+              "last_name": "Kharzoum",
+              "username": "Abdulraman_Kharzoum",
+              "type": "private"
+            },
+            "date": 1763047151,
+            "forward_origin": {
+              "type": "user",
+              "sender_user": {
+                "id": 8346495442,
+                "is_bot": false,
+                "first_name": "Abdalrahman",
+                "last_name": "Kharzoum",
+                "username": "Abdulraman_Kharzoum",
+                "language_code": "en"
+              },
+              "date": 1763046538
+            },
+            "forward_from": {
+              "id": 8346495442,
+              "is_bot": false,
+              "first_name": "Abdalrahman",
+              "last_name": "Kharzoum",
+              "username": "Abdulraman_Kharzoum",
+              "language_code": "en"
+            },
+            "forward_date": 1763046538,
+            "voice": {
+              "duration": 1,
+              "mime_type": "audio/ogg",
+              "file_id": "AwACAgQAAxkBAAIBMWkV9IqD6bjd7L4O8bzsm9ry0__hAAKrHAAC7X2xUEs4Cw4rt4QINgQ",
+              "file_unique_id": "AgADqxwAAu19sVA",
+              "file_size": 39569
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authenticity Assistant Agent": {
+      "main": [
+        [
+          {
+            "node": "Clean & Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Agent Vars",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Vars": {
+      "main": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Message Length": {
+      "main": [
+        [
+          {
+            "node": "Split Message Into Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Full Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Message Into Chunks": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Message Chunk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Message Chunk": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database Logger Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database Logger Tool update for query": {
+      "ai_tool": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Full Message": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Full Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search For Product Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONVERSATION MEMORY": {
+      "ai_memory": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Database Logger Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Authenticity Assistant Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEXT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file1": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEXT": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Audio": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Photo": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Format Output": {
+      "main": [
+        [
+          {
+            "node": "Check Message Length",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9242233d-a4ed-477d-bbfa-e62ba4a9919c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "82a07e25bb5446408550f6d7aab9c641753a0ccd2476c2dc971589d3e32f8cc3"
+  },
+  "id": "E5lrPn3NdwSZaDia",
+  "tags": []
+}
