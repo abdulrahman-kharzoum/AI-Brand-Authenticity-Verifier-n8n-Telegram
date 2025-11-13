@@ -1,4 +1,5 @@
 # 🛡️ AI Brand Authenticity Verifier
+
 <img width="813" height="525" alt="image" src="https://github.com/user-attachments/assets/08c56be9-9a1c-490f-9e4d-13f084b4b537" />
 
 **An intelligent Telegram bot that helps users verify the authenticity of beauty and luxury products using advanced AI analysis, image recognition, and real-time web search.**
@@ -26,6 +27,12 @@
 
 ---
 
+## 📚 Additional Documentation
+
+- **[TOOL_USAGE_QUICK_REFERENCE.md](./TOOL_USAGE_QUICK_REFERENCE.md)** - Quick reference card for AI agent tool usage sequence and best practices
+
+---
+
 ## 🎯 Overview
 
 The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection system that helps consumers identify fake beauty and luxury products. Built on n8n workflow automation, it combines:
@@ -50,16 +57,16 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 
 ### Core Capabilities
 
-| Feature | Description |
-|---------|-------------|
-| 🖼️ **Image Analysis** | Deep forensic examination of product photos (packaging, logos, batch codes, materials) |
-| 🔍 **Product Research** | Real-time Google search for MSRP, authorized retailers, and counterfeit patterns |
-| 💬 **Smart Conversations** | Context-aware dialogue with memory to avoid repetitive questions |
-| 📊 **Risk Scoring** | 0-1 scale authenticity score based on price, seller, visuals, and research |
-| 💾 **Query Logging** | Every assessment saved to database with full audit trail |
-| 🎯 **Multi-Factor Analysis** | Price verification, seller authorization, packaging inspection, batch code validation |
-| 🌍 **Regional Intelligence** | Understands packaging variations across US, EU, Asia markets |
-| 🛡️ **Safety Warnings** | Alerts users about health risks of counterfeit cosmetics |
+| Feature                      | Description                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| 🖼️ **Image Analysis**        | Deep forensic examination of product photos (packaging, logos, batch codes, materials) |
+| 🔍 **Product Research**      | Real-time Google search for MSRP, authorized retailers, and counterfeit patterns       |
+| 💬 **Smart Conversations**   | Context-aware dialogue with memory to avoid repetitive questions                       |
+| 📊 **Risk Scoring**          | 0-1 scale authenticity score based on price, seller, visuals, and research             |
+| 💾 **Query Logging**         | Every assessment saved to database with full audit trail                               |
+| 🎯 **Multi-Factor Analysis** | Price verification, seller authorization, packaging inspection, batch code validation  |
+| 🌍 **Regional Intelligence** | Understands packaging variations across US, EU, Asia markets                           |
+| 🛡️ **Safety Warnings**       | Alerts users about health risks of counterfeit cosmetics                               |
 
 ### Supported Product Categories
 
@@ -202,6 +209,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 **Purpose:** Primary intelligence engine
 
 **Capabilities:**
+
 - **Vision API:** Multi-modal image + text analysis
 - **Conversational AI:** Context-aware dialogue management
 - **Reasoning:** Complex decision-making and risk assessment
@@ -209,6 +217,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 - **Long context window:** Handles extended conversations
 
 **Usage in workflow:**
+
 - Image analysis node (forensic packaging inspection)
 - AI Agent node (conversation orchestration)
 - Tool integration (calls Search and Think tools)
@@ -221,18 +230,19 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 
 **What it detects:**
 
-| Category | Checkpoints |
-|----------|-------------|
-| **Print Quality** | Pixelation, blurred text, ink distribution, smudging |
-| **Typography** | Font weight, kerning, family matching, alignment |
-| **Logo Forensics** | Proportions, curves, trademark symbols, positioning |
-| **Color Accuracy** | Pantone standards, brand color matching, tone variations |
-| **Materials** | Glass quality, plastic thickness, metallic finishes, texture |
-| **Micro-details** | Batch codes, barcodes, seals, cellophane, cap mechanisms |
-| **Brand Elements** | Signature details (e.g., Chanel double-C overlap) |
-| **Manipulation** | Photoshop artifacts, stock photo indicators, inconsistent lighting |
+| Category           | Checkpoints                                                        |
+| ------------------ | ------------------------------------------------------------------ |
+| **Print Quality**  | Pixelation, blurred text, ink distribution, smudging               |
+| **Typography**     | Font weight, kerning, family matching, alignment                   |
+| **Logo Forensics** | Proportions, curves, trademark symbols, positioning                |
+| **Color Accuracy** | Pantone standards, brand color matching, tone variations           |
+| **Materials**      | Glass quality, plastic thickness, metallic finishes, texture       |
+| **Micro-details**  | Batch codes, barcodes, seals, cellophane, cap mechanisms           |
+| **Brand Elements** | Signature details (e.g., Chanel double-C overlap)                  |
+| **Manipulation**   | Photoshop artifacts, stock photo indicators, inconsistent lighting |
 
 **Output Format:**
+
 ```
 Visual Quality Score: 8/10
 ✅ Authenticity Indicators: [list]
@@ -249,6 +259,7 @@ Confidence Level: High/Medium/Low
 **Purpose:** Real-time product intelligence gathering
 
 **When it's triggered:**
+
 - Price seems suspicious (>30% discount)
 - Unfamiliar product variant
 - Unknown seller/platform
@@ -259,23 +270,24 @@ Confidence Level: High/Medium/Low
 
 ```javascript
 // MSRP Verification
-"[Brand] [Product] official price 2024"
-"[Product] MSRP"
+"[Brand] [Product] official price 2024";
+"[Product] MSRP";
 
 // Authentication Guides
-"authentic [Brand] [Product] vs fake"
-"how to spot fake [Brand] [Product]"
+"authentic [Brand] [Product] vs fake";
+"how to spot fake [Brand] [Product]";
 
 // Seller Verification
-"[Brand] authorized retailers"
-"[Seller] [Brand] authorized"
+"[Brand] authorized retailers";
+"[Seller] [Brand] authorized";
 
 // Packaging Intelligence
-"[Brand] [Product] packaging 2024"
-"[Brand] batch code format"
+"[Brand] [Product] packaging 2024";
+"[Brand] batch code format";
 ```
 
 **Data extraction:**
+
 - Official retail prices from 3+ sources
 - Authorized retailer lists
 - Known counterfeit indicators
@@ -288,6 +300,7 @@ Confidence Level: High/Medium/Low
 **Purpose:** Calculate authenticity risk score
 
 **Input parameters:**
+
 ```json
 {
   "brand": "string",
@@ -301,18 +314,19 @@ Confidence Level: High/Medium/Low
 
 **Risk calculation factors:**
 
-| Factor | Weight | Red Flag Threshold |
-|--------|--------|-------------------|
-| Price discount | 30% | >40% below MSRP |
-| Seller authorization | 25% | Not on official list |
-| Image quality score | 20% | <6/10 |
-| Packaging authenticity | 15% | Mismatched elements |
-| Batch code format | 10% | Invalid format |
+| Factor                 | Weight | Red Flag Threshold   |
+| ---------------------- | ------ | -------------------- |
+| Price discount         | 30%    | >40% below MSRP      |
+| Seller authorization   | 25%    | Not on official list |
+| Image quality score    | 20%    | <6/10                |
+| Packaging authenticity | 15%    | Mismatched elements  |
+| Batch code format      | 10%    | Invalid format       |
 
 **Output:**
+
 ```json
 {
-  "riskScore": 0.78,  // 0 = authentic, 1 = fake
+  "riskScore": 0.78, // 0 = authentic, 1 = fake
   "verdict": "Likely Counterfeit",
   "reasoning": [
     "Price 50% below MSRP",
@@ -331,18 +345,21 @@ Confidence Level: High/Medium/Low
 **Purpose:** Maintain conversation context
 
 **What it stores:**
+
 - Previous messages (last 10-20 exchanges)
 - Already collected data (price, seller, product name)
 - User preferences
 - Conversation state
 
 **Benefits:**
+
 - ✅ Prevents asking same question twice
 - ✅ Natural conversation flow
 - ✅ References previous details ("Based on the photo you sent earlier...")
 - ✅ Efficient data collection
 
 **Configuration:**
+
 ```javascript
 Memory Type: Window Buffer
 Max Messages: 20
@@ -359,6 +376,7 @@ Backend: Supabase PostgreSQL
 **Tables:**
 
 #### `authenticity_queries`
+
 ```sql
 CREATE TABLE authenticity_queries (
   query_id VARCHAR(50) PRIMARY KEY,
@@ -386,6 +404,7 @@ CREATE TABLE authenticity_queries (
 ```
 
 **Indexes:**
+
 ```sql
 CREATE INDEX idx_chat_id ON authenticity_queries(chat_id);
 CREATE INDEX idx_brand ON authenticity_queries(brand);
@@ -400,21 +419,43 @@ CREATE INDEX idx_timestamp ON authenticity_queries(timestamp DESC);
 **Integration:** n8n Telegram Trigger + Message nodes
 
 **Supported inputs:**
+
 - Text messages
 - Photo uploads (up to 10MB)
 - Document attachments
 - Command triggers
 
 **Message parsing:**
+
 ```javascript
 // User data
-{{ $json.message.from.first_name }}
-{{ $json.message.from.id }}
-{{ $json.message.from.username }}
+{
+  {
+    $json.message.from.first_name;
+  }
+}
+{
+  {
+    $json.message.from.id;
+  }
+}
+{
+  {
+    $json.message.from.username;
+  }
+}
 
 // Content
-{{ $json.message.text }}
-{{ $json.message.photo[0].file_id }}
+{
+  {
+    $json.message.text;
+  }
+}
+{
+  {
+    $json.message.photo[0].file_id;
+  }
+}
 ```
 
 ---
@@ -527,14 +568,17 @@ CREATE INDEX idx_session_id ON chat_memory(session_id, timestamp DESC);
 5. Configure credentials:
 
 #### Telegram Credentials
+
 - **Name:** `Telegram Bot`
 - **Access Token:** [Your bot token from Step 1]
 
 #### Google AI Credentials
+
 - **Name:** `Google Gemini`
 - **API Key:** [Your Gemini API key from Step 3]
 
 #### Supabase Credentials
+
 - **Name:** `Supabase`
 - **Host:** [Your Supabase project URL]
 - **Database:** `postgres`
@@ -543,6 +587,7 @@ CREATE INDEX idx_session_id ON chat_memory(session_id, timestamp DESC);
 - **API Key:** [Your anon key]
 
 #### Google Custom Search Credentials (if using)
+
 - **API Key:** [Your search API key]
 - **CX:** [Your search engine ID]
 
@@ -553,27 +598,32 @@ CREATE INDEX idx_session_id ON chat_memory(session_id, timestamp DESC);
 Open the workflow and update these node configurations:
 
 **1. Telegram Trigger Node:**
+
 - Set webhook URL (auto-generated by n8n)
 - Test connection
 
 **2. AI Agent Node:**
+
 - Model: `gemini-2.0-flash-exp` or `gemini-1.5-flash-002`
 - Temperature: `0.3` (for consistent analysis)
 - Max tokens: `2048`
 - System prompt: [Use the optimized prompt from above]
 
 **3. Image Analyzer Node:**
+
 - Model: `gemini-2.0-flash-exp` (supports vision)
 - Input: Image URL from Telegram
 - Prompt: [Use forensic image analysis prompt]
 
 **4. Memory Node:**
+
 - Type: `Window Buffer Memory`
 - Max messages: `20`
 - Session ID: `{{ $json.message.from.id }}`
 - Supabase connection configured
 
 **5. Supabase Insert Node:**
+
 - Table: `authenticity_queries`
 - Columns: Map according to schema
 
@@ -598,16 +648,17 @@ Open the workflow and update these node configurations:
 ### Step 8: Monitor & Optimize
 
 **Check Supabase:**
+
 ```sql
 -- View recent queries
-SELECT * FROM authenticity_queries 
-ORDER BY timestamp DESC 
+SELECT * FROM authenticity_queries
+ORDER BY timestamp DESC
 LIMIT 10;
 
 -- Analytics: Most queried brands
-SELECT brand, COUNT(*) as queries 
-FROM authenticity_queries 
-GROUP BY brand 
+SELECT brand, COUNT(*) as queries
+FROM authenticity_queries
+GROUP BY brand
 ORDER BY queries DESC;
 
 -- Average risk scores by brand
@@ -618,6 +669,7 @@ GROUP BY brand;
 ```
 
 **n8n Execution Logs:**
+
 - Monitor for errors
 - Check execution times
 - Verify tool calls
@@ -631,10 +683,12 @@ GROUP BY brand;
 #### **Starting a Verification**
 
 1. **Find your bot on Telegram**
+
    - Search for `@YourBotName`
    - Send `/start`
 
 2. **Send a product photo**
+
    - Take clear, well-lit photos of:
      - Front of product
      - Batch code / serial number
@@ -642,6 +696,7 @@ GROUP BY brand;
      - Any labels or stickers
 
 3. **Answer questions**
+
    - Where did you buy it?
    - How much did you pay?
    - Do you have a receipt?
@@ -743,30 +798,30 @@ CREATE TABLE authenticity_queries (
   username VARCHAR(100),
   chat_id BIGINT NOT NULL,
   telegram_username VARCHAR(100),
-  
+
   -- Product details
   brand VARCHAR(100),
   product TEXT,
   seller_info TEXT,
   price DECIMAL(10,2),
   currency VARCHAR(10) DEFAULT 'USD',
-  
+
   -- Image data
   image_link TEXT,
   image_quality_score INTEGER CHECK (image_quality_score >= 0 AND image_quality_score <= 10),
-  
+
   -- Search intelligence
   search_performed BOOLEAN DEFAULT FALSE,
   search_queries JSONB,
   official_msrp DECIMAL(10,2),
   seller_authorized BOOLEAN,
-  
+
   -- Analysis results
   risk_score DECIMAL(3,2) CHECK (risk_score >= 0 AND risk_score <= 1),
   verdict VARCHAR(50) CHECK (verdict IN ('Likely Genuine', 'Likely Counterfeit', 'Unclear', 'Incomplete')),
   reasons JSONB,
   key_findings TEXT,
-  
+
   -- Metadata
   timestamp TIMESTAMP DEFAULT NOW(),
   conversation_turns INTEGER DEFAULT 1
@@ -803,7 +858,7 @@ WHERE chat_id = 123456789
 ORDER BY timestamp DESC;
 
 -- Find most counterfeited brands
-SELECT brand, 
+SELECT brand,
        COUNT(*) as total_checks,
        SUM(CASE WHEN verdict = 'Likely Counterfeit' THEN 1 ELSE 0 END) as fake_count,
        ROUND(AVG(risk_score), 2) as avg_risk
@@ -813,7 +868,7 @@ GROUP BY brand
 ORDER BY fake_count DESC;
 
 -- Risky sellers
-SELECT seller_info, 
+SELECT seller_info,
        COUNT(*) as checks,
        AVG(risk_score) as avg_risk,
        SUM(CASE WHEN verdict = 'Likely Counterfeit' THEN 1 ELSE 0 END) as fakes
@@ -911,11 +966,13 @@ ORDER BY date DESC;
 ### Scenario 1: Clear Counterfeit
 
 **Input:**
+
 - Photo: Chanel No. 5 bottle
 - Seller: "Instagram seller @cheapfragrances"
 - Price: $30
 
 **Analysis:**
+
 - MSRP: $135
 - Discount: 78%
 - Image quality: 4/10 (blurry logo, wrong font)
@@ -929,11 +986,13 @@ ORDER BY date DESC;
 ### Scenario 2: Authentic Product
 
 **Input:**
+
 - Photo: La Mer cream jar
 - Seller: "Nordstrom in-store"
 - Price: $185
 
 **Analysis:**
+
 - MSRP: $180-$195
 - Discount: 0%
 - Image quality: 9/10 (all elements correct)
@@ -947,11 +1006,13 @@ ORDER BY date DESC;
 ### Scenario 3: Unclear / Need More Info
 
 **Input:**
+
 - Photo: Blurry Fenty Beauty foundation
 - Seller: "Friend gave it to me"
 - Price: Unknown
 
 **Analysis:**
+
 - Image quality: 5/10 (can't verify details)
 - No price data
 - Unknown provenance
@@ -968,12 +1029,14 @@ ORDER BY date DESC;
 #### ❌ Bot doesn't respond to photos
 
 **Check:**
+
 1. Telegram trigger is active
 2. Privacy mode disabled in @BotFather
 3. Webhook properly configured
 4. n8n workflow is activated
 
 **Fix:**
+
 ```
 /setprivacy → disable
 Restart workflow in n8n
@@ -985,12 +1048,14 @@ Check execution logs
 #### ❌ Image analysis fails
 
 **Check:**
+
 1. Gemini API key is valid
 2. Image format supported (JPG, PNG)
 3. File size under 10MB
 4. API quota not exceeded
 
 **Fix:**
+
 - Test API key in Google AI Studio
 - Check n8n error logs
 - Verify image node configuration
@@ -1000,15 +1065,17 @@ Check execution logs
 #### ❌ Search tool not finding results
 
 **Check:**
+
 1. Google Custom Search API enabled
 2. Search Engine ID (CX) correct
 3. Query format is specific
 4. API quota available
 
 **Fix:**
+
 ```javascript
 // Make queries more specific
-"Dior Sauvage official price" 
+"Dior Sauvage official price"
 → "Dior Sauvage EDT 100ml price 2024 USA"
 ```
 
@@ -1017,12 +1084,14 @@ Check execution logs
 #### ❌ Database insert fails
 
 **Check:**
+
 1. Supabase credentials correct
 2. Table schema matches
 3. Data types compatible
 4. Network connection stable
 
 **Fix:**
+
 ```sql
 -- Test connection
 SELECT NOW();
@@ -1039,12 +1108,14 @@ SELECT * FROM authenticity_queries LIMIT 1;
 #### ❌ Memory not working
 
 **Check:**
+
 1. Window Buffer Memory configured
 2. Session ID uses chat_id
 3. Supabase backend connected
 4. chat_memory table exists
 
 **Fix:**
+
 - Clear old memory: `DELETE FROM chat_memory WHERE session_id = '123456789';`
 - Restart workflow
 - Check memory node configuration
@@ -1056,11 +1127,13 @@ SELECT * FROM authenticity_queries LIMIT 1;
 ### Webhook Endpoints
 
 **Telegram Webhook:**
+
 ```
 POST https://your-n8n-instance.com/webhook/telegram-bot
 ```
 
 **Query API (optional, if you expose it):**
+
 ```
 GET  /api/authenticity/query/:queryId
 POST /api/authenticity/check
@@ -1074,19 +1147,19 @@ GET  /api/authenticity/user/:chatId/history
 **Example: Query database directly**
 
 ```javascript
-const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require("@supabase/supabase-js");
 
 const supabase = createClient(
-  'https://your-project.supabase.co',
-  'your-anon-key'
+  "https://your-project.supabase.co",
+  "your-anon-key"
 );
 
 // Get user's verification history
 const { data, error } = await supabase
-  .from('authenticity_queries')
-  .select('*')
-  .eq('chat_id', 123456789)
-  .order('timestamp', { ascending: false });
+  .from("authenticity_queries")
+  .select("*")
+  .eq("chat_id", 123456789)
+  .order("timestamp", { ascending: false });
 
 console.log(data);
 ```
@@ -1096,6 +1169,7 @@ console.log(data);
 ### Extending the System
 
 **Add new tool:**
+
 ```javascript
 // In AI Agent node, add to tools array
 {
@@ -1109,6 +1183,7 @@ console.log(data);
 ```
 
 **Add new verification factor:**
+
 ```sql
 -- Extend database schema
 ALTER TABLE authenticity_queries
@@ -1122,13 +1197,13 @@ ADD COLUMN packaging_weight DECIMAL(5,2);
 
 ### Expected Performance
 
-| Metric | Target | Notes |
-|--------|--------|-------|
-| **Response Time** | <5 seconds | For simple queries (text only) |
-| **Image Analysis** | <8 seconds | Including upload + processing |
-| **With Search** | <12 seconds | Image + search + analysis |
-| **Accuracy** | >85% | Based on manual verification |
-| **Uptime** | 99%+ | n8n workflow stability |
+| Metric             | Target      | Notes                          |
+| ------------------ | ----------- | ------------------------------ |
+| **Response Time**  | <5 seconds  | For simple queries (text only) |
+| **Image Analysis** | <8 seconds  | Including upload + processing  |
+| **With Search**    | <12 seconds | Image + search + analysis      |
+| **Accuracy**       | >85%        | Based on manual verification   |
+| **Uptime**         | 99%+        | n8n workflow stability         |
 
 ### Optimization Tips
 
@@ -1164,10 +1239,10 @@ function sanitize(input) {
 // Add "Limit" node: 10 requests per user per minute
 
 // Anonymize data for analytics
-SELECT 
-  brand, 
-  verdict, 
-  risk_score 
+SELECT
+  brand,
+  verdict,
+  risk_score
 FROM authenticity_queries
 -- Exclude: username, chat_id, telegram_username
 ```
@@ -1200,6 +1275,7 @@ MIT License - Free to use and modify
 ## 🙏 Credits
 
 **Built with:**
+
 - n8n workflow automation
 - Google Gemini Flash 2.5
 - Supabase PostgreSQL
@@ -1212,13 +1288,14 @@ MIT License - Free to use and modify
 ## 📞 Support
 
 **For technical issues:**
+
 - Check troubleshooting section
 - Review n8n execution logs
 - Verify API quotas
 - Test each component individually
 
 **For questions:**
+
 - Open GitHub issue
 - Join n8n community
 - Contact via Telegram: @YourSupportUsername
-
