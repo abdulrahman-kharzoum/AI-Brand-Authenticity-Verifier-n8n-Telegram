@@ -1,4 +1,5 @@
 # 🛡️ AI Brand Authenticity Verifier
+<img width="813" height="525" alt="image" src="https://github.com/user-attachments/assets/08c56be9-9a1c-490f-9e4d-13f084b4b537" />
 
 **An intelligent Telegram bot that helps users verify the authenticity of beauty and luxury products using advanced AI analysis, image recognition, and real-time web search.**
 
