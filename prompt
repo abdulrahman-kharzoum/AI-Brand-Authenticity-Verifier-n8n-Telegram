@@ -2154,29 +2154,28 @@ IF DATABASE UPDATE WITHOUT IMAGE LINK CHECK = FAILURE!
 **Database Logger Tool (Create):**
 ```javascript
 // Google Sheets - Append operation
-// Node: Google Sheets → Append
-// Spreadsheet: authenticity_queries
 // Sheet: Sheet1
+example :
 // Data to append:
 {
-  "query_id": "AQ-{{$now.format('YYYYMMDDHHmmss')}}-{{ random4chars }}",
+  "query_id": "AQ-{{$now.format('YYYYMMDDHHmmss')}}-{{ Array(4).fill(0).map(() => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * 62))).join('') }}",
   "chat_id": "{{ $json.message.from.id }}",
   "username": "{{ $json.message.from.first_name }}",
   "telegram_username": "{{ $json.message.from.username }}",
-  "brand": "{{ $extracted_brand or null }}",
-  "product": "{{ $extracted_product or null }}",
-  "seller_info": null,
-  "price": null,
-  "currency": "USD",
-  "image_link": "{{ $image_url or null }}",
-  "image_quality_score": null,
+  "brand": "extracted_brand or empty (needed)",
+  "product": "extracted_product or empty  (needed)",
+  "seller_info": "extracted_product or empty (needed)",
+  "price": "the price the user paid for the product",
+  "currency": "USD or $",
+ "imageLink": "{{ $if($('Upload file').isExecuted, $('Upload file').item.json.webViewLink, 'no image') }}",
+  "image_quality_score": "null",
   "search_performed": false,
-  "search_queries": "[]",
-  "official_msrp": null,
+  "search_queries": "[...]",
+  "official_msrp": "official product price",
   "seller_authorized": null,
-  "risk_score": null,
+  "risk_score": "between 0-1",
   "verdict": "Incomplete",
-  "reasons": "[]",
+  "reasons": "[...]",
   "key_findings": "Initial contact - collecting data",
   "timestamp": "{{ $now }}"
 }
@@ -2190,23 +2189,22 @@ IF DATABASE UPDATE WITHOUT IMAGE LINK CHECK = FAILURE!
 // Sheet: Sheet1
 // Operation: Update Row
 // Lookup Column: query_id
-// Lookup Value: {{ $queryId }}
+// Lookup Value: query_Id  
 // Data to update (only changed fields):
 {
-  "brand": "{{ $newBrand }}",
-  "product": "{{ $newProduct }}",
+  "brand": " newBrand ",
+  "product": "newProduct name ",
   "seller_info": "{{ $newSellerInfo }}",
-  "price": {{ $newPrice }},
-  "image_link": "{{ $retrievedImageLink }}",  // From Get Images Link DB!
-  "image_quality_score": {{ $imageScore }},
-  "search_performed": {{ $searchPerformed }},
-  "search_queries": "{{ JSON.stringify($searchQueriesArray) }}",
-  "official_msrp": {{ $officialMSRP }},
-  "seller_authorized": {{ $sellerAuthorized }},
-  "risk_score": {{ $riskScore }},
-  "verdict": "{{ $verdict }}",
-  "reasons": "{{ JSON.stringify($reasonsArray) }}",
-  "key_findings": "{{ $keyFindings }}",
+  "price": " newPrice,
+  "image_link": "retrievedImageLink",  // From Get Images Link DB!
+  "image_quality_score": "imageScore",
+  "search_performed": ""searchPerformed",
+  "search_queries": "searchQueriesArray",
+  "official_msrp": "officialMSRP",
+  "seller_authorized": "sellerAuthorized",
+  "risk_score": riskScore",
+  "verdict": "verdict",
+  "reasons": "reasonsArray",
   "timestamp": "{{ $now }}"
 }
 ```
@@ -2219,7 +2217,7 @@ IF DATABASE UPDATE WITHOUT IMAGE LINK CHECK = FAILURE!
 // Sheet: Sheet1
 // Operation: Lookup Row
 // Lookup Column: query_id
-// Lookup Value: {{ $queryId }}
+// Lookup Value: queryId
 // Returns: { query_id, image_link }
 ```
 
@@ -2234,8 +2232,8 @@ IF DATABASE UPDATE WITHOUT IMAGE LINK CHECK = FAILURE!
 //   - If not exists: Append new row
 // Data:
 {
-  "query_id": "{{ $queryId }}",
-  "image_link": "{{ $newImageLink }}"
+  "query_id": "queryId",
+  "image_link": "newImageLink"
 }
 ```
 
