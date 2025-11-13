@@ -2,7 +2,7 @@
 
 <img width="813" height="525" alt="image" src="https://github.com/user-attachments/assets/08c56be9-9a1c-490f-9e4d-13f084b4b537" />
 
-**An intelligent Telegram bot that helps users verify the authenticity of beauty and luxury products using advanced AI analysis, image recognition, and real-time web search.**
+**An intelligent Telegram bot that helps users verify the authenticity of beauty and luxury products using advanced AI analysis, voice recognition, image recognition, and real-time web search.**
 
 [![n8n](https://img.shields.io/badge/Built%20with-n8n-orange)](https://n8n.io)
 [![Gemini](https://img.shields.io/badge/Powered%20by-Gemini%20Flash%202.5-blue)](https://deepmind.google/technologies/gemini/)
@@ -37,6 +37,7 @@
 
 The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection system that helps consumers identify fake beauty and luxury products. Built on n8n workflow automation, it combines:
 
+- **Voice-to-text transcription** using Google Gemini Flash 2.5
 - **Forensic image analysis** using Google Gemini Vision
 - **Real-time product research** via Google Search
 - **Intelligent conversation management** with memory
@@ -59,6 +60,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 
 | Feature                      | Description                                                                            |
 | ---------------------------- | -------------------------------------------------------------------------------------- |
+| 🎤 **Voice Input**           | Voice message transcription and natural language understanding via Gemini Flash 2.5    |
 | 🖼️ **Image Analysis**        | Deep forensic examination of product photos (packaging, logos, batch codes, materials) |
 | 🔍 **Product Research**      | Real-time Google search for MSRP, authorized retailers, and counterfeit patterns       |
 | 💬 **Smart Conversations**   | Context-aware dialogue with memory to avoid repetitive questions                       |
@@ -85,12 +87,20 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. USER INTERACTION                                         │
-│    User sends photo + details via Telegram                  │
+│    User sends text, voice, or photo via Telegram            │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 2. IMAGE ANALYSIS (Gemini Flash 2.5 Vision)                │
+│ 2. INPUT PROCESSING                                         │
+│    • Voice → Transcription (Gemini Flash 2.5)               │
+│    • Image → Vision Analysis (Gemini Flash 2.5)             │
+│    • Text → Direct processing                               │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 3. IMAGE ANALYSIS (if applicable)                           │
 │    • Forensic packaging inspection                          │
 │    • Logo/typography verification                           │
 │    • Material quality assessment                            │
@@ -100,15 +110,15 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 3. DATA COLLECTION (AI Agent + Memory)                     │
-│    • Extract brand/product from image                       │
+│ 4. DATA COLLECTION (AI Agent + Memory)                     │
+│    • Extract brand/product from image/voice/text            │
 │    • Ask for: price, purchase location                      │
 │    • Use memory to track what's already known               │
 └──────────────────┬──────────────────────────────────────────┘
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 4. PRODUCT RESEARCH (Google Search Tool)                   │
+│ 5. PRODUCT RESEARCH (Google Search Tool)                   │
 │    Triggered when needed:                                   │
 │    • Search official MSRP                                   │
 │    • Verify seller authorization                            │
@@ -118,7 +128,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 5. RISK ANALYSIS (Think Tool)                              │
+│ 6. RISK ANALYSIS (Think Tool)                              │
 │    Calculate risk score (0-1) based on:                     │
 │    • Price vs MSRP (40%+ discount = red flag)              │
 │    • Seller authorization status                            │
@@ -129,7 +139,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 6. DATABASE LOGGING (Supabase)                             │
+│ 7. DATABASE LOGGING (Supabase)                             │
 │    Save complete record:                                    │
 │    • Query ID, username, chat ID                            │
 │    • Product details, price, seller                         │
@@ -139,7 +149,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
                    │
                    ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 7. DELIVER VERDICT                                          │
+│ 8. DELIVER VERDICT                                          │
 │    User receives:                                           │
 │    • Clear verdict (Genuine ✅ / Counterfeit ❌ / Unclear ⚠️)│
 │    • Risk score with explanation                            │
@@ -210,6 +220,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 
 **Capabilities:**
 
+- **Voice Transcription:** Audio-to-text conversion with natural language understanding
 - **Vision API:** Multi-modal image + text analysis
 - **Conversational AI:** Context-aware dialogue management
 - **Reasoning:** Complex decision-making and risk assessment
@@ -218,6 +229,7 @@ The **AI Brand Authenticity Verifier** is a sophisticated counterfeit detection 
 
 **Usage in workflow:**
 
+- Voice transcription node (audio message processing)
 - Image analysis node (forensic packaging inspection)
 - AI Agent node (conversation orchestration)
 - Tool integration (calls Search and Think tools)
@@ -421,6 +433,7 @@ CREATE INDEX idx_timestamp ON authenticity_queries(timestamp DESC);
 **Supported inputs:**
 
 - Text messages
+- Voice messages (transcribed via Gemini Flash 2.5)
 - Photo uploads (up to 10MB)
 - Document attachments
 - Command triggers
@@ -449,6 +462,11 @@ CREATE INDEX idx_timestamp ON authenticity_queries(timestamp DESC);
 {
   {
     $json.message.text;
+  }
+}
+{
+  {
+    $json.message.voice.file_id;
   }
 }
 {
@@ -687,13 +705,23 @@ GROUP BY brand;
    - Search for `@YourBotName`
    - Send `/start`
 
-2. **Send a product photo**
+2. **Provide product information**
 
-   - Take clear, well-lit photos of:
+   You can interact in multiple ways:
+
+   - **📸 Send photos:** Take clear, well-lit pictures of:
+
      - Front of product
      - Batch code / serial number
      - Box (if available)
      - Any labels or stickers
+
+   - **🎤 Send voice messages:** Simply describe the product:
+
+     - "I bought a Chanel perfume from eBay for $50"
+     - "Can you check this Dior lipstick I got?"
+
+   - **💬 Type messages:** Provide details via text
 
 3. **Answer questions**
 
@@ -711,7 +739,7 @@ GROUP BY brand;
 
 ### Example User Journey
 
-**Scenario: User bought perfume from eBay**
+**Scenario 1: User sends photo (Traditional Flow)**
 
 ```
 User: [Sends photo of Dior Sauvage bottle]
@@ -782,6 +810,84 @@ Your safety matters! 🛡️
 **Reference ID:** `AQ-20250121154523-K8P2`
 
 Want me to check another product? 🛍️
+```
+
+---
+
+**Scenario 2: User sends voice message (Voice Flow)**
+
+```
+User: [Sends voice message] "Hi, I just bought a Dior Sauvage perfume from eBay for $55. Can you check if it's real?"
+
+Bot: [Transcribes voice message]
+
+Thanks for reaching out! 👋
+
+I heard you loud and clear! You mentioned:
+• **Product:** Dior Sauvage perfume
+• **Seller:** eBay
+• **Price:** $55
+
+That price is catching my attention already 👀 - the official retail for Dior Sauvage is around $110.
+
+To give you a complete authentication, I'll need:
+📸 A clear photo of the bottle (especially the batch code area)
+
+Once I can see it, I'll run my full forensic analysis and give you a detailed verdict! 🔍
+
+─────────────────────────
+
+User: [Sends photo]
+
+Bot: Perfect! Now I have everything I need. 🕵️‍♀️
+
+🔍 **AUTHENTICITY ASSESSMENT**
+
+**Product:** Dior Sauvage Eau de Toilette (100ml)
+**Purchased From:** eBay third-party seller
+**Price Paid:** $55 (Official retail: $110)
+
+───
+
+**🎯 VERDICT: Likely Counterfeit ❌**
+**📊 Risk Score:** 0.78/1.00 (high risk)
+
+───
+
+**🔬 Analysis:**
+
+**Visual Inspection (Score: 8/10):**
+✅ Overall presentation looks decent
+⚠️ Batch code font appears slightly irregular
+⚠️ Cap finish quality uncertain from image
+
+**Key Risk Factors:**
+• **Price:** $55 is 50% below official retail of $110 — major red flag
+• **Seller:** eBay third-party sellers are not authorized Dior retailers
+• **Batch code:** Format doesn't match Dior's standard system
+• **Discount:** Authentic Dior rarely discounted beyond 25%
+
+───
+
+**💡 RECOMMENDATION:**
+I strongly advise against using this product. Counterfeit fragrances can contain harmful chemicals.
+
+**Next steps:**
+• Request full refund through eBay buyer protection
+• Report seller for counterfeit goods
+
+**Where to buy authentic Dior Sauvage:**
+• Dior official website
+• Sephora
+• Nordstrom, Macy's, Bloomingdale's
+
+Your safety matters! 🛡️
+
+───
+
+**Reference ID:** `AQ-20250113162315-V8X2`
+
+Feel free to send another voice message or text if you have more questions! 🎤💬
 ```
 
 ---
