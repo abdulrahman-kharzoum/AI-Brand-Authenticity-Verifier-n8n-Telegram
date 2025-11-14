@@ -12,6 +12,9 @@
 ## n8n Version used:
 + Version 1.119.1 stable Cloud
 + Released in 11/12/2025
+## Telegram ID 
++ @ai_brand_wonder_beauties_bot
+
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
